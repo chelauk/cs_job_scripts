@@ -14,8 +14,7 @@ interval=$5
 user=$6
 
 # no jobs complete
-
-if ! [ -f $dir/bwa-complete ] && ! [ -f "$dir"/interval_complete ]  && ! [ -f "$dir"/realign_complete ] && ! [ -f "$dir"/recal_tab_complete ] && ! [ -f "$dir"/recal_complete ] && ! [ -f "$dir"/var_call_complete ] # if none of the jobs have completed 
+if ! [ -f "$dir"/bwa-complete ] && ! [ -f "$dir"/interval_complete ]  && ! [ -f "$dir"/realign_complete ] && ! [ -f "$dir"/recal_tab_complete ] && ! [ -f "$dir"/recal_complete ] && ! [ -f "$dir"/var_call_complete ] # if none of the jobs have completed 
 then
   FIRST=$(qsub -wd "$dir"/log -N "bwa-$name" \
   /home/sejjctj/job_scripts/sge_bwa_mem_sambamba_samblaster_4_core.job \
@@ -76,7 +75,7 @@ then
   echo "six jobs"
   exit 0
 
-if ! [ -f "$dir"/interval_complete ]  && ! [ -f "$dir"/realign_complete ] && ! [ -f "$dir"/recal_tab_complete ] && ! [ -f "$dir"/recal_complete ] && ! [ -f "$dir"/var_call_complete ] # if bwa completed 
+elif ! [ -f "$dir"/interval_complete ]  && ! [ -f "$dir"/realign_complete ] && ! [ -f "$dir"/recal_tab_complete ] && ! [ -f "$dir"/recal_complete ] && ! [ -f "$dir"/var_call_complete ] # if bwa completed 
 then 
   
   SECOND=$(qsub -wd "$dir"/log -N "intCr-$name" -hold_jid "bwa-$name" \
