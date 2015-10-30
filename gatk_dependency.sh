@@ -32,10 +32,12 @@ fi
 
 if  [ -z "$4" ]
  then echo "Interval .bed file is optional if none is necessary please insert 0 or for a particular chromosome enter chromosome name"
+ exit
 fi
 
 if  [ -z "$5" ]
  then echo "please enter username"
+ exit
 fi
 
 # no jobs complete
