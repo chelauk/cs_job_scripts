@@ -34,11 +34,9 @@ WORKDIR=$workplace
 echo "the job is running on the node $HOSTNAME"
 echo "job number $JOB_ID"
 
-
 echo "working on sample $query1"
 
 bamfile="$query1"\.bwa.bam
-
 
 ### these parameters are required in order to fill in the read groups lines
 readgroup="$query1"_bwa
@@ -67,9 +65,9 @@ echo "####MESS I am now on directory:"
 pwd
 echo
 
-######################################
+#######################################################
 # check if reference is already available             #
-#####################################
+#######################################################
 
 if [ ! -f "$referencefasta".sa ]
 then
@@ -136,6 +134,10 @@ ls -lh
 ##################################
 # copy to workplace folder       #
 ##################################
+
+# create "job_done marker for pipeline
+
+touch "$workplace"/bwa-complete
 
 mv "${bamfile:0:7}"* "$workplace"
 date
