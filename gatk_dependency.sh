@@ -1,8 +1,7 @@
 #!/bin/bash
-name=$1
+sample=$1
 refname=$2
 dir=$3
-sample=$4
 ########################
 # generate inputs      #
 ########################
@@ -10,8 +9,34 @@ read1="$sample"_R1.fq.gz
 read2="$sample"_R2.fq.gz
 bamfile="$sample"_R1.fq.gz.bwa.sorted.bam
 #######################
-interval=$5
-user=$6
+interval=$4
+user=$5
+
+# check arguments are given
+if  [ -z "$1" ]
+  then
+    echo "Please give a job name, the reads with be supplied as sample_R1.fq.gz and sample_R2.fq.gz\r
+    the aligned file will be sample_R1.fq.gz.bwa.sorted.bam"
+    exit
+fi
+
+if  [ -z "$2" ]
+ then echo "please supply reference name.  Currently human_g1k_v37"
+ exit
+fi
+
+if  [ -z "$3" ]
+ then echo "please supply current working directly.  Remember to create a log directory within this directory"
+ exit
+fi
+
+if  [ -z "$4" ]
+ then echo "Interval .bed file is optional if none is necessary please insert 0 or for a particular chromosome enter chromosome name"
+fi
+
+if  [ -z "$5" ]
+ then echo "please enter username"
+fi
 
 # no jobs complete
 if ! [ -f "$dir"/bwa-complete ] && ! [ -f "$dir"/interval_complete ]  && ! [ -f "$dir"/realign_complete ] && ! [ -f "$dir"/recal_tab_complete ] && ! [ -f "$dir"/recal_complete ] && ! [ -f "$dir"/var_call_complete ] # if none of the jobs have completed 
