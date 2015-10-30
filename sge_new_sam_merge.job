@@ -1,0 +1,146 @@
+#!/bin/bash -l
+#$ -S /bin/bash
+#$ -N sam_merge
+#$ -j yes
+#$ -l scr=200G
+#$ -l h_rt=12:00:00
+#$ -l h_vmem=4G
+#$ -l tmem=4G
+#$ -V
+
+workplace=$1
+user=$2
+prefix=$3
+output_prefix=$4
+
+sample=$output_prefix
+platform="ILLUMINA"
+readgroup="$output_prefix"\.bam
+library="GOSgene"
+array=( $(ls "$workplace"/lane*/"$prefix"*\.bam) )
+
+PICARD=/share/apps/genomics/picard-1.130/dist
+SAMTOOLS=/share/apps/genomics/samtools-1.2/bin
+
+echo "---parameters received-----"
+echo "workplace " "$workplace"
+echo "bams" "${array[@]}"
+echo "user " "$user"
+echo "output_prefix " "$output_prefix"
+echo "==========================="
+echo
+
+
+
+echo "the job is running on the node $HOSTNAME"
+echo "job number $JOB_ID"
+
+#######################################
+# user folder creation
+######################################
+
+cd /scratch0 || exit
+if [ ! -d "$user" ]
+then
+        echo "####MESS the directory $user on /scratch0/ does not exist: creating it"
+        mkdir "$user"
+        cd "$user" || exit
+        mkdir "$JOB_ID"
+        cd "$JOB_ID" || exit
+else
+        echo "####MESS the directory $user on /scratch0 exists, moving to it"
+        cd "$user" || exit
+        mkdir "$JOB_ID"
+        cd "$JOB_ID" || exit
+fi
+
+echo "####MESS I am now on directory:"
+pwd
+echo
+
+echo "####MESS starting the job and moving to /scratch0/$user/$JOB_ID"
+date
+
+#####################
+# copy bams local   #
+#####################
+for i in "${array[@]}"
+do
+echo "$i"
+done
+for i in "${array[@]}"
+do
+cp "$i" .
+done
+
+ls
+echo "####MESS copy completed"
+date
+
+ls
+
+#######################
+#    create array     #
+#######################
+
+
+arr=($(ls -f *bam))
+
+echo "${arr[@]}"
+
+########################
+## run merge files   ##
+#######################
+
+vars=$(printf "%s " "${arr[@]}")
+bam1="${arr[0]}"
+echo "$vars"
+
+date
+
+
+echo "samtools merge -cp -h $bam1 $output_prefix.bam $vars"
+
+"$SAMTOOLS"/samtools merge -cp -h $bam1 $output_prefix.bam $vars
+
+date
+
+echo "index with samtools"
+
+$SAMTOOLS/samtools index "$output_prefix"\.bam
+date
+
+ls -l
+###############################
+#  AddOrReplaceReadGroups     #
+###############################
+
+mkdir tmp
+
+echo "java -Djava.io.tmpdir=tmp -Xmx10g -Xms4g -jar $PICARD/picard.jar AddOrReplaceReadGroups INPUT=$output_prefix\.bam OUTPUT=$output_prefix\.rg\.bam VALIDATION_STRINGENCY=LENIENT SORT_ORDER=coordinate RGID=$readgroup RGLB=$library RGPL=$platform RGSM=$sample RGPU=$platform 1>$workplace/diag"
+
+java -Djava.io.tmpdir=tmp -Xmx2g -Xms2g -jar "$PICARD"/picard.jar AddOrReplaceReadGroups INPUT="$output_prefix"\.bam OUTPUT="$output_prefix"\.rg\.bam VALIDATION_STRINGENCY=LENIENT SORT_ORDER=coordinate RGID="$readgroup" RGLB="$library" RGPL="$platform" RGSM="$sample" RGPU=$platform 1>"$workplace"/diag
+date
+
+ls -lh
+
+rm -r tmp
+echo "index with samtools"
+
+"$SAMTOOLS"/samtools index "$output_prefix"\.rg\.bam
+date
+
+#############
+# copy back #
+#############
+
+
+mv "$output_prefix"\.rg\.bam "$workplace"/.
+mv "$output_prefix"\.rg\.bam.bai "$workplace"/.
+
+date
+echo "####MESS Delete files"
+
+cd ..
+
+rm -r "$JOB_ID"

@@ -1,0 +1,222 @@
+#!/bin/bash -l
+# Force bash as the executing shell.
+#$ -S /bin/bash
+#$ -N rel_rec
+# Join the error stream to the output stream.
+#$ -j yes
+#$ -l h_rt=12:00:00
+#$ -l h_vmem=36G
+#$ -l tmem=36G
+#$ -l scr=60G
+#$ -V
+
+#parameters to be passed to the job
+referencename=$1                             # eg human_g1k_v37
+workplace=$2                                    # directory where files will be copied to and from
+bamfile=$3                                        # bam file from which the intervals will be created from GATK target creatot
+interval=$4                                        # intervals in which we want intervals created (somewhat confusing but it could be a specific chromosome or a bed file)
+user=$5                                             # self explanatory
+reference=$referencename.fasta
+
+
+#################################################
+# check if intervals file is given
+#################################################
+
+# fi interval is given as 0                                                 
+if [ "$interval" == 0 ]
+ then interval=""                                                             # in this case no intervals are given
+# if $interval looks like bed file
+elif [[ "$interval" == *"bed" ]]                                          # this procedure will copy a give bed file to the node
+        then cp "$workplace"/"$interval" .
+# if interval is given as a chromosome then keep it         # this will simply give the chromosome name to the variable
+elif [[ "$interval" == *"[1-9A-Z]" ]]
+    then
+    :
+fi
+
+################################################
+# where the applications are located
+################################################
+
+NEWSAMDIR=/share/apps/genomics/samtools-1.2/bin
+APPDIR=/share/apps/genomics/GenomeAnalysisTK-3.3-0
+
+###############################################
+# where the references are located
+###############################################
+
+# todo these can be kept as bgzip file gatk can handle that
+
+indels=/share/apps/centos5/genomics/reference/queue_dbs/Mills_and_1000G_gold_standard.indels.b37.vcf
+indels2=/share/apps/centos5/genomics/reference/queue_dbs/1000G_phase1.indels.b37.vcf
+snps=/share/apps/centos5/genomics/reference/queue_dbs/dbsnp_137.b37.excluding_sites_after_129.vcf
+
+REFDIR=/share/apps/centos5/genomics/reference/chela
+
+#############################################
+# these are the files that will be output
+#############################################
+
+echo "file names to be created"
+
+intervals=${bamfile:0:${#bamfile}-4}\.intervals
+
+echo "$intervals"
+
+
+##################################################
+# a variable to check whether the necessary files are on scratch
+##################################################
+
+referenceindex="$referencename"\.dict
+
+
+#########################################################
+# creating the workspace on the node i.e. simply creates /scratch0/sejjctj
+#########################################################
+
+echo "the job is running on the node $HOSTNAME"
+echo "job number $JOB_ID"
+
+cd /scratch0  || exit
+if [ ! -d "$user" ]
+then
+	echo "####MESS the directory $user on /scratch0/ does not exist: creating it"
+	mkdir "$user"
+	cd "$user"  || exit
+else
+	echo "####MESS the directory $user on /scratch0 exists, moving to it"
+	cd "$user"  || exit
+fi 
+
+##################################
+# copy of the reference if needed
+##################################
+
+if [ ! -f "$referenceindex" ]
+
+then
+	echo "####MESS untaring the reference files to the temporary directory"
+	tar -xzf $REFDIR/"$referencename"\.tar.gz -C /scratch0/"$user"/
+else
+	echo "####MESS the reference already exists in the node"
+fi
+			
+echo "####MESS copy reference completed"
+date
+
+##### folder creation ##############
+
+echo "creating the job directory"
+
+mkdir "$JOB_ID"
+cd "$JOB_ID"  || exit  
+echo "####MESS I am now on directory:"
+pwd
+
+
+##################################
+# copy all the files necessary 
+##################################
+
+echo "### copying the bamfile"
+date
+cp "$workplace"/"$bamfile" .
+
+if ! [ $? -eq 0 ]
+   then
+   exit 1
+fi 
+
+
+if [ -f "$workplace"/"$bamfile"\.bai ]
+	then
+	cp "$workplace"/"$bamfile"\.bai .
+else
+	echo "no bam index found, creating index"
+	"$NEWSAMDIR"/samtools index "$bamfile"
+fi
+
+
+echo "### copy completed"
+date
+
+echo "### copying the indelfile"
+date
+cp "$indels" .
+cp "$indels2" .
+cp "$snps" .
+
+echo "### copy completed"
+date
+
+ls -lhrt
+
+echo "# check if $interval is empty"
+
+if  [ -z "$interval" ]
+   
+
+  then
+	echo "no bed or chromosome given"
+	echo "creating intervals file"
+	
+	java -Xms2g -Xmx2g -jar "$APPDIR"/GenomeAnalysisTK.jar \
+   	-nt 16 \
+        -I "$bamfile" \
+   	-R /scratch0/"$user"/"$reference" \
+   	-T RealignerTargetCreator \
+   	-o "$intervals" \
+   	--known Mills_and_1000G_gold_standard.indels.b37.vcf \
+   	--known 1000G_phase1.indels.b37.vcf \
+        --known dbsnp_137.b37.excluding_sites_after_129.vcf
+
+	if [ $? -eq 0 ]
+	  then
+	    touch "$workplace"/interval_complete
+	fi
+        date
+
+
+
+else
+
+
+	echo "### creating the intervals"
+	date
+
+	java -Xms2g -Xmx2g -jar "$APPDIR"/GenomeAnalysisTK.jar \
+   	-I "$bamfile" \
+        -nt 16 \
+   	-R /scratch0/"$user"/"$reference" \
+   	-T RealignerTargetCreator \
+   	-L "$interval" \
+   	--known Mills_and_1000G_gold_standard.indels.b37.vcf \
+   	--known 1000G_phase1.indels.b37.vcf \
+   	-o "$intervals" 
+        if [ $? -eq 0 ]
+          then
+	   echo "### intervals created"
+	   touch "$workplace"/interval_complete
+	fi
+        date
+
+fi
+############################################################
+# copy files back
+##########################################################
+
+
+date
+cp "$intervals" "$workplace"/.
+
+echo "####MESS moving to /scratch0/$user"
+date
+cd /scratch0/"$user" || exit
+echo "####MESS removing any left file"
+rm -r "$JOB_ID"
+echo "####MESS removal done"
+date
+echo "### job completed"
+

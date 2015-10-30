@@ -1,0 +1,80 @@
+#!/bin/bash -l
+#$ -S /bin/bash
+#$ -N bamutilCHR
+#$ -M chela.james@ucl.ac.uk
+#$ -m be
+#$ -j yes
+#$ -l scr=15G
+#$ -l h_rt=6:30:00
+#$ -l h_vmem=3G
+#$ -l tmem=3G
+#$ -V
+
+workplace=$1
+bamfile=$2
+user=$3
+output=$4
+
+echo "---parameters received-----"
+echo "$workplace"
+echo "$bamfile"
+echo "$output"
+echo "==========================="
+echo
+
+BAMUTIL=/share/apps/genomics/bamUtil-master/bin
+
+echo "the job is running on the node $HOSTNAME"
+echo "job number $JOB_ID"
+
+#######################################
+# user folder creation
+######################################
+
+cd /scratch0 || exit
+if [ ! -d "$user" ]
+then
+	echo "####MESS the directory $user on /scratch0/ does not exist: creating it"
+	mkdir "$user"
+	cd "$user" || exit
+	mkdir "$JOB_ID"
+	cd "$JOB_ID" || exit
+else
+	echo "####MESS the directory $user on /scratch0 exists, moving to it"
+	cd "$user"  || exit 
+	mkdir "$JOB_ID"
+	cd "$JOB_ID" || exit
+fi
+
+echo "####MESS I am now on directory:"
+pwd
+echo
+
+echo "####MESS starting the job and moving to /scratch0/$user/$JOB_ID"
+date
+
+echo "####MESS copying $workplace/$bamfile to temp directory"
+date
+cp "$workplace"/"$bamfile" .
+echo "####MESS copy completed"
+date
+
+echo "======= splitting into chromsomes ========" 
+
+
+echo "####MESS starting the bamUtils split chromosome"
+date
+$BAMUTIL/bam splitChromosome --in "$bamfile" --out "$output" 
+echo "####MESS split completed"
+date
+
+echo "## copying back"
+ls -l
+cp "$output"* "$workplace"/.
+echo "## copying done"
+date
+
+echo "--------- job finished -------"
+echo "--------- removing files -----"
+cd ../ || exit
+rm -r "$JOB_ID"

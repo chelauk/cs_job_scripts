@@ -1,0 +1,175 @@
+#!/bin/bash -l
+#Force bash as the executing shell.
+#$ -S /bin/bash
+#$ -N print_recal
+# Join the error stream to the output stream.
+#$ -j yes
+#$ -pe smp 4
+#$ -l h_rt=12:00:00
+#$ -l h_vmem=4G
+#$ -l tmem=4G
+#$ -l scr=100G
+#$ -V
+
+#parameters to be passed to the job
+referencename=$1
+workplace=$2
+bamfile=$3
+recal_data=$4
+interval=$5
+user=$6
+
+bamroot="${bamfile:0:${#bamfile}-4}"
+recalbam="$bamroot"\.recal.bam
+bamindex="$bamroot"\.bai
+
+#################################################
+# check if intervals file is given
+#################################################
+
+# fi interval is given as 0
+if [ "$interval" == 0 ]
+ then interval=""
+# if $interval looks like bed file
+elif [[ "$interval" == *"bed" ]]
+        then cp "$interval" .
+# if interval is given as a chromosome then keep it
+elif [[ "$interval" == *"[1-9A-Z]" ]]
+    then
+    :
+fi
+
+
+NEWSAMDIR=/share/apps/genomics/samtools-1.2/bin
+
+echo "directories"
+REFDIR=/share/apps/centos5/genomics/reference/chela
+APPDIR=/share/apps/genomics/GenomeAnalysisTK-3.3-0
+
+referenceindex="$referencename"\.dict
+
+echo "the job is running on the node $HOSTNAME"
+echo "job number $JOB_ID"
+
+cd /scratch0  || exit
+if [ ! -d "$user" ]
+then
+	echo "####MESS the directory $user on /scratch0/ does not exist: creating it"
+	mkdir "$user"
+	cd "$user"  || exit
+else
+	echo "####MESS the directory $user on /scratch0 exists, moving to it"
+	cd "$user"  || exit
+fi
+
+echo "####MESS I am now on directory:"
+pwd
+echo
+
+##################################
+# copy of the reference if needed
+##################################
+
+if [ ! -f "$referenceindex" ]
+then
+	echo "####MESS untaring the reference files to the temporary directory"
+	tar -xzf $REFDIR/"$referencename"\.tar.gz -C /scratch0/"$user"/
+else
+	echo "####MESS the reference already exists in the node"
+fi
+			
+echo "####MESS copy reference completed"
+date
+
+
+##### folder creation ##############
+
+echo "creating the job directory"
+mkdir "$JOB_ID"
+cd "$JOB_ID" || exit
+echo "####MESS I am now on directory:"
+pwd
+
+
+
+##################################
+# copy all the files necessary 
+##################################
+
+echo "### copying the bamfile and index"
+date
+cp "$workplace"/"$bamroot"* .
+
+if ! [ $? -eq 0 ]
+   then
+   exit 1
+fi 
+
+
+
+if [ -f "$bamindex" ]
+	then
+	:
+else
+	echo "no bam index found, creating index"
+	"$NEWSAMDIR"/samtools index "$bamfile"
+fi
+echo "### copy completed"
+date
+
+echo "### copying the recal_table"
+date
+cp "$workplace"/"$recal_data" .
+date
+
+
+# check if $intevals is empty
+if  [ -z "$interval" ]
+   then
+ 	java -Xmx4g -Xms4g  \
+   	-jar $APPDIR/GenomeAnalysisTK.jar \
+   	-nct 8 \
+        -T PrintReads \
+   	-R /scratch0/"$user"/"$referencename"\.fasta \
+   	-I "$bamfile" \
+   	-BQSR "$recal_data" \
+   	-o "$recalbam"
+        if [ $? -eq 0 ]
+	  then
+          echo "recal done"
+          touch "$workplace"/recal_complete
+        fi
+else
+   	java -Xmx4g -Xms4g  \
+	-jar $APPDIR/GenomeAnalysisTK.jar \
+        -T PrintReads \
+        -nct 8 \
+   	-R /scratch0/"$user"/"$referencename"\.fasta \
+   	-L "$interval" \
+   	-I "$bamfile" \
+   	-BQSR "$recal_data" \
+   	-o "$recalbam"
+        if [ $? -eq 0 ]
+           then
+           echo "recal done"
+           touch "$workplace"/recal_complete
+        fi
+fi
+############################################################
+# copy files back
+##########################################################
+
+
+date
+cp "$recalbam" "$workplace"/.
+cp "${recalbam:0:${#recalbam}-1}"i "$workplace"/.
+
+echo "####MESS moving to /scratch0/$user"
+date
+cd /scratch0/"$user" || exit
+echo "####MESS removing any left file"
+rm -r "$JOB_ID"
+echo "####MESS removal done"
+date
+echo "### job completed"
+date

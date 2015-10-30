@@ -1,0 +1,136 @@
+#!/bin/bash -l
+#Force bash as the executing shell.
+#$ -S /bin/bash
+# Join the error stream to the output stream.
+#$ -j yes
+#$ -l h_rt=08:00:00
+#$ -pe smp 4
+#$ -l h_vmem=6G
+#$ -l tmem=6G
+#$ -l scr=40G
+#$ -V
+#$ -R y
+
+date
+
+BWADIR=/share/apps/genomics/bwa-0.7.12
+NEWSAMDIR=/share/apps/genomics/samtools-1.2/bin
+REFDIR=/share/apps/cto/reference/g1kh37
+
+# the qsub launcher has to supply, along with the working directory
+# also the following parameters
+reference=$1
+query1=$2
+query2=$3
+workplace=$4
+user=$5
+referencefasta=$reference\.fasta
+
+WORKDIR=$workplace
+
+echo "the job is running on the node $HOSTNAME"
+echo "job number $JOB_ID"
+
+
+echo "working on sample $query1"
+
+bamfile="$query1"\.bwa.bam
+
+
+### these parameters are required in order to fill in the read groups lines
+readgroup="$query1"_bwa
+sample=$query1
+library="gosgene"
+platformunit="illumina"
+
+# Set the current working directory to be within the sequencing
+# directory
+# the working directory has to be supplied within the qsub launcher as -v workplace="workingdirectory"
+# using an absolute path
+# the reads will be copied in the node hdd where all the output will be produced
+
+cd /scratch0 || exit 
+if [ ! -d "$user" ]
+then
+	echo "####MESS the directory user on /scratch0/ does not exist: creating it"
+	mkdir "$user" 
+	cd "$user"  || exit
+else
+	echo "####MESS the directory $user on /scratch0 exists, moving to it"
+	cd "$user" || exit
+fi
+
+echo "####MESS I am now on directory:"
+pwd
+echo
+
+######################################
+# check if reference is already available             #
+#####################################
+
+if [ ! -f "$referencefasta".sa ]
+then
+        echo "####MESS untaring the reference files to the temporary directory"
+        tar -xzf $REFDIR/"$reference"\.tar.gz -C /scratch0/"$user"/
+else
+        echo "####MESS the reference already exists in the node"
+fi
+
+echo "####MESS copy reference completed"
+date
+
+echo "creating the job directory"
+mkdir "$JOB_ID"
+cd "$JOB_ID" || exit
+
+echo "####MESS I am now on directory:"
+pwd
+echo
+echo "make temporary directory for PICARD"
+mkdir tmp
+echo "###MESS copying the fastq files"
+cp "$WORKDIR"/"$query1" .
+cp "$WORKDIR"/"$query2" .
+echo "###MESS copy completed"
+date
+
+# Run the program
+# WARNING - this job uses an already done reference
+
+echo "############## running the bwa mem alignment of the two pairs"
+
+"$BWADIR"/bwa mem -aM -R "@RG\tID:$readgroup\tSM:$sample\tPL:$platformunit\tLB:$library\tPU:$platformunit" /scratch0/"$user"/"$referencefasta" -t 4 "$query1" "$query2" | 
+"$NEWSAMDIR"/samtools view -bS - -o "$bamfile"
+date
+ls -lh
+
+########################################
+# using sortsam on 8 cores
+########################################
+
+echo "Running samtools to sort $bamfile"
+
+"$NEWSAMDIR"/samtools sort -@ 4 -m 4G "$bamfile"  "$bamfile".sorted
+
+date 
+
+ls -lh
+
+# copy to workplace folder
+##################################
+
+mv "$bamfile".sorted* "$workplace"
+
+date
+
+###################################
+# removing the job folder
+###################################
+echo "####MESS moving to /scratch0/$user"
+date
+cd /scratch0/"$user" || exit
+echo "####MESS removing any left file"
+rm -r "$JOB_ID"
+echo "####MESS removal done"
+date
+echo "####END job finished"

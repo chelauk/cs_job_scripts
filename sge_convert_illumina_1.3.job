@@ -1,0 +1,73 @@
+#!/bin/bash -l
+#$ -S /bin/bash
+#$ -N seqtk
+#$ -j yes
+#$ -l h_rt=04:00:00
+#$ -l h_vmem=3G
+#$ -l tmem=3G
+#$ -l scr=20G
+#$ -V
+
+echo "working on " $HOSTNAME
+
+
+# where the files you are working on are
+workplace=$1 # use full path
+# the input file name only
+input=$2
+# the output file name only
+output=$3
+# ucl username
+user=$4
+
+SEQTK=/share/apps/genomics/seqtk/
+
+cd /scratch0 || exit
+
+if [ ! -d "$user" ]
+then 
+ 	echo "####MESS the directory user on /scratch0/ does not exist: creating it"
+        mkdir "$user"
+        cd "$user" || exit
+else
+        echo "####MESS the directory $user on /scratch0 exists, moving to it"
+        cd "$user" || exit
+fi
+
+echo "####MESS I am now on directory:"
+pwd
+
+date
+
+echo "creating the job directory"
+mkdir "$JOB_ID"
+cd "$JOB_ID" || exit
+echo "####MESS I am now on directory:"
+pwd
+
+
+echo "###copying the fastq file"
+
+cp "$workplace"/"$input" .
+
+"$SEQTK"/seqtk seq -Q64 -V "$input" | gzip -v9 > "$output"
+
+echo "## copying back"
+
+cp "$output" "$workplace"/sanger/ 
+
+echo "## copying done"
+date
+ 
+###################################
+# removing the job folder
+###################################
+echo "####MESS moving to /scratch0/$user"
+date
+cd /scratch0/"$user" || exit
+
+echo "####MESS removing any left file"
+rm -r "$JOB_ID"
+echo "####MESS removal done"
+date
+echo "####END job finished"

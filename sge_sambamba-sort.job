@@ -1,0 +1,68 @@
+#!/bin/bash -l
+#Force bash as the executing shell.
+#$ -S /bin/bash
+# Join the error stream to the output stream.
+#$ -j yes
+#$ -l h_rt=16:00:00
+#$ -pe smp 4
+#$ -l h_vmem=20G
+#$ -l tmem=20G
+#$ -l scr=100G
+#$ -V
+#$ -R y
+
+SAMBAMBA=/share/apps/cto/INSTALLS
+workingdir=$1
+bamfile=$2
+user=$3
+
+echo "running sambamba sort on " $HOSTNAME
+
+# go to scratch
+cd /scratch0 || exit
+# check is user directory exists, if not, make one
+if [ -d "$user" ]
+  then 
+  cd "$user" || exit
+else 
+  mkdir "$user"
+  cd "$user" || exit
+fi
+# make unique job directory
+
+mkdir "$JOB_ID"
+
+cd "$JOB_ID" || exit
+
+# make temp directory for sambamba
+
+mkdir temp
+
+
+# copy bamfile over
+
+cp "$workingdir"/"$bamfile" .
+
+########################################
+# using sambamba-sort on 4 cores       #
+########################################
+
+echo "Running samtools to sort $bamfile"
+
+"$SAMBAMBA"/sambamba_v0.5.8 sort -m 4G -t 4  "$bamfile"  --tmpdir=temp  "$bamfile".sorted
+
+########################################
+# copy back and clean up               #
+########################################
+
+ls -lh
+
+cp "${bamfile:0:${#bamfile}-4}".sorted* "$workingdir" 
+
+cd ..
+
+rm -r "$JOB_ID"
+
+
+# job completed
+exit 0

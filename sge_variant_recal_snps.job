@@ -1,0 +1,266 @@
+#!/bin/bash -l
+#Force bash as the executing shell.
+#$ -S /bin/bash
+#$ -N varecal
+# Join the error stream to the output stream.
+#$ -j yes
+#$ -l h_rt=10:00:00
+#$ -l h_vmem=24G
+#$ -l tmem=24G
+#  -l scr=70G
+#$ -V
+
+
+#parameters to be passed to the job
+reference=human_g1k_v37
+workplace=$1
+combinedvcf=$2
+dbsnps=dbsnp_138.b37.excluding_sites_after_129.vcf.gz
+omni=1000G_omni2.5.b37.vcf.gz
+hapmap=hapmap_3.3.b37.vcf.gz
+mills=Mills_and_1000G_gold_standard.indels.b37.vcf.gz
+projectname=$3
+user=$4
+
+echo "-------parameters received-----------"
+echo "$reference"
+echo "$workplace"
+echo "$dbsnps"
+echo "$omni"
+echo "$hapmap"
+echo "$user"
+echo "-------------------------------------"
+echo
+
+echo "file names to be created"
+
+rawsnps=$projectname\.gatk.raw.snps.vcf
+rawindels=$projectname\.gatk.raw.indels.vcf
+
+echo "directories"
+REFDIR=/share/apps/cto/reference/g1kh37
+APPDIR=/share/apps/genomics/GenomeAnalysisTK-3.4-46/
+RESDIR=/share/apps/cto/reference/gatk_resources
+
+echo "the job is running on the node $HOSTNAME"
+echo "job number $JOB_ID"
+
+cd /scratch0 || exit
+if [ ! -d "$user" ]
+then
+	echo "####MESS the directory $user on /scratch0/ does not exist: creating it"
+	mkdir "$user"
+	cd "$user" || exit
+else
+	echo "####MESS the directory $user on /scratch0 exists, moving to it"
+	cd "$user" || exit
+fi
+
+echo "####MESS I am now on directory:"
+pwd
+echo
+
+###################################
+# copy of the reference if needed #
+###################################
+
+if [ ! -f $reference.fasta ]
+then
+        echo "####MESS copying the reference files to the temporary directory"
+        cp $REFDIR/$reference.fasta .
+else
+        echo "####MESS the reference already exists in the node"
+fi
+
+if [ ! -f $reference.fasta.fai ]
+then
+        echo "####MESS copying the reference files index to the temporary directory"
+        cp $REFDIR/$reference.fasta.fai .
+else
+        echo "###MESS the reference index already exists in the node"
+fi
+
+
+if [ ! -f $reference.dict ]
+then
+        echo "####MESS copying the reference files dictionary to the temporary directory"
+        cp $REFDIR/$reference.dict .
+else
+        echo "###MESS the reference index already exists in the node"
+fi
+
+
+echo "####MESS copy reference completed"
+
+##### folder creation ##############
+
+echo "creating the job directory"
+mkdir "$JOB_ID"
+cd "$JOB_ID" || exit
+echo "####MESS I am now on directory:"
+pwd
+echo
+
+########################################################
+# copy of all the files necessary to the job execution #
+########################################################
+
+
+echo "copying the raw variants"
+cp "$workplace"/"$combinedvcf" .
+cp "$workplace"/"$combinedvcf".tbi .
+echo "done"
+
+echo "### copying the dbSNP file and capture"
+date
+cp $RESDIR/$dbsnps .
+cp $RESDIR/$dbsnps.tbi .
+cp $RESDIR/$omni .
+cp $RESDIR/$omni.tbi .
+cp $RESDIR/$hapmap .
+cp $RESDIR/$hapmap.tbi .
+cp $RESDIR/$mills .
+cp $RESDIR/$mills.tbi .
+
+echo "### copy completed"
+date
+
+echo "check the files copied"
+ls -l
+echo
+
+#####################################
+# run GATK to create select variant type (SNP)  #
+#####################################
+
+ java -Xms4g -Xmx16g -jar $APPDIR/GenomeAnalysisTK.jar \
+   -R ../$reference.fasta \
+   -T SelectVariants \
+   --variant "$combinedvcf" \
+   -o "$rawsnps" \
+   -selectType SNP
+
+echo "### SNPs generated"
+date
+   
+#######################################
+# run GATK to create select variant type (INDEL)   #
+#######################################
+
+ java -Xms4g -Xmx16g -jar $APPDIR/GenomeAnalysisTK.jar \
+   -R ../$reference.fasta \
+   -T SelectVariants \
+   --variant "$combinedvcf" \
+   -o "$rawindels" \
+   -selectType INDEL
+
+echo "### SNPs generated"
+date
+   
+
+#################################
+## Running Variant Recalibrator #
+#################################
+
+echo "### Variant Recalibrator for snps" 
+date
+
+ java -Xms4g -Xmx16g -jar $APPDIR/GenomeAnalysisTK.jar \
+   -T VariantRecalibrator \
+   -R ../$reference.fasta \
+   --input "$rawsnps" \
+   -resource:hapmap,known=false,training=true,truth=true,prior=15.0 $hapmap \
+   -resource:omni,known=false,training=true,truth=false,prior=12.0  $omni \
+   -resource:dbsnp,known=true,training=false,truth=false,prior=6.0 $dbsnps \
+   -an QD -an MQ -an MQRankSum -an ReadPosRankSum -an FS -an SOR -an DP \
+   -mode SNP \
+   -tranche 100.0 -tranche 99.9 -tranche 99.0 -tranche 90.0 \
+   -recalFile "$projectname".snps.recal \
+   -tranchesFile "$projectname".snps.tranches \
+   -rscriptFile "$projectname".snp.plots.R
+
+echo "### Variant Recalibrator for INDELS" 
+date
+
+ java -Xms4g -Xmx16g -jar $APPDIR/GenomeAnalysisTK.jar \
+   -T VariantRecalibrator \
+   -R ../$reference.fasta \
+   --input "$rawindels" \
+   --maxGaussians 4 \
+   -resource:mills,known=false,training=true,truth=true,prior=12.0 $mills \
+   -resource:dbsnp,known=true,training=false,truth=false,prior=6.0 $dbsnps \
+   -an QD -an MQRankSum -an ReadPosRankSum -an FS -an SOR -an DP \
+   -mode INDEL \
+   -tranche 100.0 -tranche 99.9 -tranche 99.0 -tranche 90.0 \
+   -recalFile "$projectname".indels.recal \
+   -tranchesFile "$projectname".indels.tranches \
+   -rscriptFile "$projectname".indels.plots.R
+   
+
+###############################
+# apply recalibration (SNPS ) #
+###############################
+
+ java -Xms4g -Xmx14g -jar $APPDIR/GenomeAnalysisTK.jar \
+   -T ApplyRecalibration \
+   -R ../$reference.fasta \
+   -input "$rawsnps" \
+   --ts_filter_level 99.0 \
+   -tranchesFile "$projectname".snps.tranches \
+   -recalFile "$projectname".snps.recal \
+   -mode SNP \
+   -o "$projectname".snps.recalibrated.filtered.vcf
+
+#################################
+# apply recalibration (INDELS ) #
+#################################
+
+ java -Xms4g -Xmx14g -jar $APPDIR/GenomeAnalysisTK.jar \
+   -T ApplyRecalibration \
+   -R ../$reference.fasta \
+   -input "$rawindels" \
+   --ts_filter_level 99.0 \
+   -tranchesFile "$projectname".indels.tranches \
+   -recalFile "$projectname".indels.recal \
+   -mode INDEL \
+   -o "$projectname".indels.recalibrated.filtered.vcf
+
+#########################
+# combine vcfs          #
+#########################
+
+java -cp $APPDIR/GenomeAnalysisTK.jar org.broadinstitute.gatk.tools.CatVariants \
+    -R ../$reference.fasta \
+    -V "$projectname".snps.recalibrated.filtered.vcf \
+    -V "$projectname".indels.recalibrated.filtered.vcf \
+    -out "$projectname".combined.vcf \
+    -assumeSorted
+
+###########################################
+# zip and copy files to working directory #
+###########################################
+
+bgzip "$projectname".combined.vcf
+tabix -p vcf "$projectname".combined.vcf
+
+cp ./*plots.R "$workplace"
+cp ./*pdf "$workplace"
+cp ./"$projectname".combined.vcf* "$workplace"
+
+
+###########################
+# removing the job folder #
+###########################
+
+echo "####MESS moving to /scratch0/$user"
+date
+cd /scratch0/"$user" || exit
+
+echo "####MESS removing any left file"
+rm -r "$JOB_ID"
+echo "####MESS removal done"
+date
+
+
+echo "### job finished"
+date

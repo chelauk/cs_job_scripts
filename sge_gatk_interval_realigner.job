@@ -1,0 +1,211 @@
+#!/bin/bash -l
+#Force bash as the executing shell.
+#$ -S /bin/bash
+#$ -N rel_rec
+# Join the error stream to the output stream.
+#$ -j yes
+#$ -l h_rt=12:00:00
+#$ -l h_vmem=6G
+#$ -l tmem=6G
+#$ -pe smp 4
+#$ -l scr=100G
+#$ -V
+
+#parameters to be passed to the job
+referencename=$1
+workplace=$2
+intervals=$3
+bamfile=$4
+interval=$5
+user=$6
+realigned="${bamfile:0:${#bamfile}-3}"realigned.bam
+
+#################################################
+# check if interval.bed file is given
+#################################################
+
+# fi interval is given as 0
+if [ "$interval" == 0 ]
+ then interval=""
+# if $interval looks like bed file
+elif [[ "$interval" == *"bed" ]]
+        then cp "$workplace"/"$interval" .
+# if interval is given as a chromosome then keep it
+elif [[ "$interval" == *"[1-9A-Z]" ]]
+    then
+    :
+fi
+
+
+NEWSAMDIR=/share/apps/genomics/samtools-1.2/bin
+
+indels=/share/apps/centos5/genomics/reference/queue_dbs/Mills_and_1000G_gold_standard.indels.b37.vcf
+indels2=/share/apps/centos5/genomics/reference/queue_dbs/1000G_phase1.indels.b37.vcf
+snps=/share/apps/centos5/genomics/reference/queue_dbs/dbsnp_137.b37.excluding_sites_after_129.vcf
+
+
+# reference and apps
+REFDIR=/share/apps/centos5/genomics/reference/chela
+APPDIR=/share/apps/genomics/GenomeAnalysisTK-3.3-0
+
+referenceindex="$referencename"\.dict
+
+echo "the job is running on the node $HOSTNAME"
+echo "job number $JOB_ID"
+
+cd /scratch0 || exit
+if [ ! -d "$user" ]
+then
+	echo "####MESS the directory $user on /scratch0/ does not exist: creating it"
+	mkdir "$user"
+	cd "$user" || exit
+else
+	echo "####MESS the directory $user on /scratch0 exists, moving to it"
+	cd "$user"  || exit
+fi
+
+echo "####MESS I am now on directory:"
+pwd
+echo
+
+##################################
+# copy of the reference if needed
+##################################
+
+if [ ! -f "$referenceindex" ]
+then
+	echo "####MESS untaring the reference files to the temporary directory"
+	tar -xzf "$REFDIR"/"$referencename"\.tar.gz -C /scratch0/"$user"/
+else
+	echo "####MESS the reference already exists in the node"
+fi
+			
+echo "####MESS copy reference completed"
+date
+
+
+##### folder creation ##############
+echo "creating the job directory"
+mkdir "$JOB_ID"
+cd "$JOB_ID" || exit
+echo "####MESS I am now on directory:"
+pwd
+echo
+mkdir tmp
+
+##################################
+# copy all the files necessary 
+##################################
+
+echo "### copying the bamfile"
+date
+cp "$workplace"/"$bamfile" .
+
+
+if ! [ $? -eq 0 ]
+   then
+   exit 1
+fi 
+
+if [ -f "$workplace"/"$bamfile"\.bai ]
+	then
+	cp "$workplace"/"$bamfile"\.bai .
+else
+	echo "no bam index found, creating index"
+	"$NEWSAMDIR"/samtools index "$bamfile"
+fi
+echo "### copy completed"
+
+date
+
+
+echo "### copying the intervals file"
+date
+
+
+cp "$workplace"/"$intervals" .
+echo "### copying the indelfile"
+date
+cp "$indels" .
+cp "$indels2" .
+cp "$snps" .
+echo "### copy completed"
+date
+
+# check if there is an intervals bed 
+if  [ -z "$interval" ]
+   then
+	echo "no bed or chromosome given"
+
+	############################################
+	# realign the bam file around known indels 
+	############################################
+
+	echo "### realigning the bam"
+	date
+
+	java -Xms4g -Xmx4g -Djava.io.tmpdir=tmp \
+  	-jar "$APPDIR"/GenomeAnalysisTK.jar \
+        -I "$bamfile" \
+  	-R /scratch0/"$user"/"$referencename"\.fasta \
+  	-T IndelRealigner \
+  	-targetIntervals "$intervals" \
+  	--filter_bases_not_stored \
+  	--knownAlleles "$indels" \
+        --knownAlleles "$indels2" \
+        --knownAlleles "$snps" \
+        -o "$realigned" 
+	if [ $? -eq 0 ]
+          then
+	  echo "### realign completed"
+          touch "$workplace"/realign_complete	
+        fi
+	date
+
+else
+
+
+	############################################
+	# realign the bam file around known indels 
+	############################################
+
+	echo "### realigning the bam"
+	date
+
+	java -Xmx4g -Xms4g -Djava.io.tmpdir=tmp \
+  	-jar "$APPDIR"/GenomeAnalysisTK.jar \
+  	-I "$bamfile" \
+  	-R /scratch0/"$user"/"$referencename"\.fasta \
+  	-T IndelRealigner \
+  	-targetIntervals "$intervals" \
+  	--filter_bases_not_stored \
+  	-o "$realigned" \
+  	-L "$interval" \
+  	--knownAlleles "$indels" \
+        --knownAlleles "$indels2" \
+        --knownAlleles "$snps"
+        if [ $? -eq 0 ]
+	  then
+   	  echo "### realign completed"
+          touch "$workplace"/realign_complete
+	fi
+        date
+
+fi
+############################################################
+# copy files back
+##########################################################
+
+
+date
+cp "${realigned:0:${#realigned}-1}"* "$workplace"/.
+
+echo "####MESS moving to /scratch0/$user"
+date
+cd /scratch0/"$user" || exit
+echo "####MESS removing any left file"
+rm -r "$JOB_ID"
+echo "####MESS removal done"
+date
+echo "### job completed"
+date

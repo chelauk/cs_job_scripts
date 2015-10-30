@@ -1,0 +1,85 @@
+#!/bin/bash -l
+#Force bash as the executing shell.
+#$ -S /bin/bash
+# Join the error stream to the output stream.
+#$ -j yes
+#$ -l h_rt=04:00:00
+#$ -l h_vmem=8G
+#$ -l tmem=8G
+#$ -l scr=20G
+# export environment variables 
+#$ -V
+# reservation for multicore jobs, prevents others skipping 
+#$ -R y
+
+date
+
+PICARDDIR=/share/apps/genomics/picard-1.130/dist
+NEWSAMDIR=/share/apps/genomics/samtools-1.2/bin
+
+# the qsub launcher has to supply, along with the working directory
+# also the following parameters
+workplace=$1
+bamfile=$2
+user=$3
+
+WORKDIR=$workplace
+
+echo "the job is running on the node $HOSTNAME"
+echo "job number $JOB_ID"
+
+echo "working on sample $bamfile"
+
+cd /scratch0
+if [ ! -d $user ]
+then
+	echo "####MESS the directory user on /scratch0/ does not exist: creating it"
+	mkdir $user
+	cd $user
+else
+	echo "####MESS the directory $user on /scratch0 exists, moving to it"
+	cd $user
+fi
+
+echo "####MESS I am now on directory:"
+pwd
+echo
+
+echo "creating the job directory"
+mkdir $JOB_ID
+cd $JOB_ID
+echo "####MESS I am now on directory:"
+pwd
+echo
+echo "make temporary directory for PICARD"
+mkdir tmp
+date
+
+cp $workplace/$bamfile .
+
+java -Xms6g -Xmx6g -Djava.io.tmpdir=$PWD/tmp -jar $PICARDDIR/picard.jar MarkDuplicates I=$bamfile O=$bamfile.rmdup.bam M=metrics.file ASSUME_SORTED=true
+date
+
+$NEWSAMDIR/samtools index $bamfile.rmdup.bam
+
+$NEWSAMDIR/samtools flagstat $bamfile.rmdup.bam > $bamfile.stats
+###################################
+# copy to workplace folder
+##################################
+
+mv $bamfile.rmdup.bam* $workplace
+mv $bamfile.stats $workplace
+mv metrics.file $workplace
+date
+
+###################################
+# removing the job folder
+###################################
+echo "####MESS moving to /scratch0/$user"
+date
+cd /scratch0/$user
+echo "####MESS removing any left file"
+rm -r $JOB_ID
+echo "####MESS removal done"
+date
+echo "####END job finished"
