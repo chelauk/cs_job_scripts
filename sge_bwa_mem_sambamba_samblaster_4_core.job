@@ -114,7 +114,10 @@ ls -lh
 
 echo "Running sambamba sort $bamfile"
 
-"$SAMBAMBA"/sambamba_v0.5.8 sort -t 4  "$bamfile" 
+mkdir temp
+### was getting frequent unable to write errors
+
+"$SAMBAMBA"/sambamba_v0.5.8 sort -m 4G -t 4  "$bamfile"  --tmpdir=temp
 
 if [ $? -eq 0 ]
 then
