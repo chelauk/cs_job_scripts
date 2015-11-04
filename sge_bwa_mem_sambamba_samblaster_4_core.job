@@ -138,7 +138,7 @@ samtools idxstats "${bamfile:0:7}"*sorted.bam  > "${bamfile:0:7}".stats
 
 # create "job_done marker for pipeline
 
-touch "$workplace"/bwa-complete
+touch "$workplace"/bwa_complete
 
 mv "${bamfile:0:7}"* "$workplace"
 date
