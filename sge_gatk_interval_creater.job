@@ -72,12 +72,19 @@ echo "$intervals"
 referenceindex="$referencename"\.dict
 
 
-#########################################################
-# creating the workspace on the node i.e. simply creates /scratch0/sejjctj
-#########################################################
+############################################################################
+# creating the workspace on the node i.e. simply creates /scratch0/sejjctj #
+############################################################################
 
 echo "the job is running on the node $HOSTNAME"
 echo "job number $JOB_ID"
+
+############################
+## load necessary modules ##
+############################
+
+module load samtools
+
 
 cd /scratch0  || exit
 if [ ! -d "$user" ]
@@ -116,9 +123,9 @@ echo "####MESS I am now on directory:"
 pwd
 
 
-##################################
-# copy all the files necessary 
-##################################
+################################
+# copy all the files necessary #
+################################
 
 echo "### copying the bamfile"
 date
@@ -203,9 +210,9 @@ else
         date
 
 fi
-############################################################
-# copy files back
-##########################################################
+###################
+# copy files back #
+###################
 
 
 date
@@ -216,6 +223,13 @@ date
 cd /scratch0/"$user" || exit
 echo "####MESS removing any left file"
 rm -r "$JOB_ID"
+
+####################
+# remove reference #
+####################
+
+rm ./human*
+
 echo "####MESS removal done"
 date
 echo "### job completed"
