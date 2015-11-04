@@ -36,13 +36,9 @@ elif [[ "$interval" == *"[1-9A-Z]" ]]
     :
 fi
 
-
-NEWSAMDIR=/share/apps/genomics/samtools-1.2/bin
-
 indels=/share/apps/centos5/genomics/reference/queue_dbs/Mills_and_1000G_gold_standard.indels.b37.vcf
 indels2=/share/apps/centos5/genomics/reference/queue_dbs/1000G_phase1.indels.b37.vcf
 snps=/share/apps/centos5/genomics/reference/queue_dbs/dbsnp_137.b37.excluding_sites_after_129.vcf
-
 
 # reference and apps
 REFDIR=/share/apps/centos5/genomics/reference/chela
@@ -101,6 +97,12 @@ echo "### copying the bamfile"
 date
 cp "$workplace"/"$bamfile" .
 
+############################
+#  load necessary module   #
+############################
+
+module load samtools
+
 
 if ! [ $? -eq 0 ]
    then
@@ -112,16 +114,14 @@ if [ -f "$workplace"/"$bamfile"\.bai ]
 	cp "$workplace"/"$bamfile"\.bai .
 else
 	echo "no bam index found, creating index"
-	"$NEWSAMDIR"/samtools index "$bamfile"
+	samtools index "$bamfile"
 fi
 echo "### copy completed"
 
 date
 
-
 echo "### copying the intervals file"
 date
-
 
 cp "$workplace"/"$intervals" .
 echo "### copying the indelfile"
@@ -164,7 +164,6 @@ if  [ -z "$interval" ]
 
 else
 
-
 	############################################
 	# realign the bam file around known indels 
 	############################################
@@ -205,6 +204,12 @@ date
 cd /scratch0/"$user" || exit
 echo "####MESS removing any left file"
 rm -r "$JOB_ID"
+####################
+# remove reference #
+####################
+
+rm ./human*
+
 echo "####MESS removal done"
 date
 echo "### job completed"
