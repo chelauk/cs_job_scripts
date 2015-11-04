@@ -34,8 +34,6 @@ elif [[ "$interval" == *"[1-9A-Z]" ]]
     :
 fi
 
-NEWSAMDIR=/share/apps/genomics/samtools-1.2/bin
-
 snps=/share/apps/centos5/genomics/reference/queue_dbs/dbsnp_137.b37.excluding_sites_after_129.vcf
 
 echo "directories"
@@ -96,11 +94,16 @@ echo "### copying the bamfile"
 date
 cp "$workplace"/"${bamfile:0:${#bamfile}-1}"? .
 
-
 if ! [ $? -eq 0 ]
    then
    exit 1
 fi 
+
+###################
+##  module load  ##
+###################
+
+module load samtools
 
 if [ -f "$workplace"/"$bamfile"\.bai ]
 	then
@@ -155,17 +158,21 @@ fi
 # copy files back
 ##########################################################
 
-
 date
 
 mv "$bamfile"\.recal_data.table "$workplace"/
-
 
 echo "####MESS moving to /scratch0/$user"
 date
 cd /scratch0/"$user" || exit
 echo "####MESS removing any left file"
 rm -r "$JOB_ID"
+#########################
+### remove references ###
+#########################
+
+rm ./human*
+
 echo "####MESS removal done"
 date
 echo "### job completed"
