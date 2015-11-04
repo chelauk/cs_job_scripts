@@ -127,11 +127,6 @@ mkdir temp
 
 sambamba_v0.5.8 sort -m 4G -t 4  "$bamfile"  --tmpdir=temp
 
-if [ $? -eq 0 ]
-then
-  touch "$workplace"/bwa_mem_complete
-fi
-
 date 
 
 ls -lh
