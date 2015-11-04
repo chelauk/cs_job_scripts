@@ -96,28 +96,36 @@ ls -lh
 echo "###MESS copy completed"
 date
 
+######################
+#### load modules ####
+######################
+
+module load bwa
+module load sambamba
+module load samblaster
+module load samtools
+
 # Run the program
 # WARNING - this job uses an already done reference
 
 echo "############## running the bwa mem alignment of the two pairs"
 
-"$BWADIR"/bwa mem -aM -R "@RG\tID:$readgroup\tSM:$sample\tPL:$platformunit\tLB:$library\tPU:$platformunit" /scratch0/"$user"/"$referencefasta" -t 2 "$query1" "$query2" | 
-$SAMBLASTER/samblaster -M -d "$bamfile".disc.sam -s "$bamfile".split.sam | "$NEWSAMDIR"/samtools view -bS - -o "$bamfile"
+bwa mem -aM -R "@RG\tID:$readgroup\tSM:$sample\tPL:$platformunit\tLB:$library\tPU:$platformunit" /scratch0/"$user"/"$referencefasta" -t 2 "$query1" "$query2" | 
+samblaster -M -d "$bamfile".disc.sam -s "$bamfile".split.sam | samtools view -bS - -o "$bamfile"
 
 date
 
 ls -lh
 
 ########################################
-#     using sortsam on 4 cores         # 
+#     using sambamba on 4 cores        # 
 ########################################
 
 echo "Running sambamba sort $bamfile"
 
 mkdir temp
-### was getting frequent unable to write errors
 
-"$SAMBAMBA"/sambamba_v0.5.8 sort -m 4G -t 4  "$bamfile"  --tmpdir=temp
+sambamba_v0.5.8 sort -m 4G -t 4  "$bamfile"  --tmpdir=temp
 
 if [ $? -eq 0 ]
 then
@@ -132,7 +140,7 @@ ls -lh
 #          stats with samtools         #
 ########################################
 
-"$NEWSAMDIR"/samtools idxstats "${bamfile:0:7}"*sorted.bam  > "${bamfile:0:7}".stats
+samtools idxstats "${bamfile:0:7}"*sorted.bam  > "${bamfile:0:7}".stats
 
 ##################################
 # copy to workplace folder       #
