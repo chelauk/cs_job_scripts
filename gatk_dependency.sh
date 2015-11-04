@@ -122,7 +122,7 @@ then
   "$bamfile" \
   "$interval" \
   "$user" )
-  echo "$SECOND"
+  echo "$THIRD"
 
   FOURTH=$(qsub -wd "$dir"/log -N "reTab-$name" -hold_jid "realn-$name" \
   /home/sejjctj/job_scripts/sge_gatk_base_recal_table_creator.job \
@@ -131,7 +131,7 @@ then
   "${bamfile:0:${#bamfile}-3}"realigned.bam \
   "$interval" \
   "$user")
-  echo "$THIRD"
+  echo "$FOURTH"
 
   FIFTH=$(qsub -wd "$dir"/log -N "recal-$name" -hold_jid "reTab-$name" \
   /home/sejjctj/job_scripts/sge_gatk_print_reads.job \
@@ -141,7 +141,7 @@ then
   "${bamfile:0:${#bamfile}-3}"realigned.bam.recal_data.table \
   "$interval" \
   "$user")
-  echo "$FOURTH"
+  echo "$FIFTH"
 
   SIXTH=$(qsub -wd "$dir"/log -N "hapl-$name" -hold_jid "recal-$name" \
   /home/sejjctj/job_scripts/sge_gatk_haplotype_caller.job \
@@ -150,7 +150,7 @@ then
   "${bamfile:0:${#bamfile}-3}"realigned.recal.bam \
   "$interval" \
   "$user")
-  echo "$FIFTH"
+  echo "$SIXTH"
 
   echo "five jobs"
   exit 0
@@ -166,15 +166,16 @@ then
   "$bamfile" \
   "$interval" \
   "$user" )
+  echo "$THIRD"
   
-  FOURTH=$(qsub -wd "$dir"/log -N "reTab-$name"  \
+  FOURTH=$(qsub -wd "$dir"/log -N "reTab-$name" -hold_jid "realn-$name" \
   /home/sejjctj/job_scripts/sge_gatk_base_recal_table_creator.job \
   "$refname" \
   "$dir" \
   "${bamfile:0:${#bamfile}-3}"realigned.bam \
   "$interval" \
   "$user")
-  echo "$THIRD"
+  echo "$FOURTH"
 
   FIFTH=$(qsub -wd "$dir"/log -N "recal-$name" -hold_jid "reTab-$name" \
   /home/sejjctj/job_scripts/sge_gatk_print_reads.job \
@@ -184,7 +185,7 @@ then
   "${bamfile:0:${#bamfile}-3}"realigned.bam.recal_data.table \
   "$interval" \
   "$user")
-  echo "$FOURTH"
+  echo "$FIFTH"
   
   SIXTH=$(qsub -wd "$dir"/log -N "hapl-$name" -hold_jid "recal-$name" \
   /home/sejjctj/job_scripts/sge_gatk_haplotype_caller.job \
@@ -193,7 +194,7 @@ then
   "${bamfile:0:${#bamfile}-3}"realigned.recal.bam \
   "$interval" \
   "$user")
-  echo "$FIFTH"
+  echo "$SIXTH"
 
   echo "three jobs"
   exit 0
@@ -208,7 +209,7 @@ elif ! [ -f "$dir"/recal_tab_complete ] && ! [ -f "$dir"/recal_complete ] &&  ! 
   "${bamfile:0:${#bamfile}-3}"realigned.bam \
   "$interval" \
   "$user")
-  echo "$THIRD"
+  echo "$FOURTH"
 
   FIFTH=$(qsub -wd "$dir"/log -N "recal-$name"  -hold_jid "reTab-$name" \
   /home/sejjctj/job_scripts/sge_gatk_print_reads.job \
@@ -218,7 +219,7 @@ elif ! [ -f "$dir"/recal_tab_complete ] && ! [ -f "$dir"/recal_complete ] &&  ! 
   "${bamfile:0:${#bamfile}-3}"realigned.bam.recal_data.table \
   "$interval" \
   "$user")
-  echo "$FOURTH"
+  echo "$FIFTH"
   
   SIXTH=$(qsub -wd "$dir"/log -N "hapl-$name" -hold_jid "recal-$name" \
   /home/sejjctj/job_scripts/sge_gatk_haplotype_caller.job \
@@ -227,7 +228,7 @@ elif ! [ -f "$dir"/recal_tab_complete ] && ! [ -f "$dir"/recal_complete ] &&  ! 
   "${bamfile:0:${#bamfile}-3}"realigned.recal.bam \
   "$interval" \
   "$user")
-  echo "$FIFTH"
+  echo "$SIXTH"
   
   echo "three jobs"
   
@@ -242,6 +243,7 @@ elif ! [ -f "$dir"/recal_complete ] && ! [ -f "$dir"/var_call_complete ] # if re
   "${bamfile:0:${#bamfile}-3}"realigned.bam.recal_data.table \
   "$interval" \
   "$user")
+  echo "$FIFTH"
 
   SIXTH=$(qsub -wd "$dir"/log -N "hapl-$name" -hold_jid "recal-$name" \
   /home/sejjctj/job_scripts/sge_gatk_haplotype_caller.job \
