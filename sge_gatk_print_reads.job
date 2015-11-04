@@ -39,10 +39,11 @@ elif [[ "$interval" == *"[1-9A-Z]" ]]
     :
 fi
 
+### load modules
 
-NEWSAMDIR=/share/apps/genomics/samtools-1.2/bin
+module load samtools
 
-echo "directories"
+
 REFDIR=/share/apps/centos5/genomics/reference/chela
 APPDIR=/share/apps/genomics/GenomeAnalysisTK-3.3-0
 
@@ -105,14 +106,12 @@ if ! [ $? -eq 0 ]
    exit 1
 fi 
 
-
-
 if [ -f "$bamindex" ]
 	then
 	:
 else
 	echo "no bam index found, creating index"
-	"$NEWSAMDIR"/samtools index "$bamfile"
+	samtools index "$bamfile"
 fi
 echo "### copy completed"
 date
@@ -169,6 +168,7 @@ date
 cd /scratch0/"$user" || exit
 echo "####MESS removing any left file"
 rm -r "$JOB_ID"
+rm ./human*
 echo "####MESS removal done"
 date
 echo "### job completed"
