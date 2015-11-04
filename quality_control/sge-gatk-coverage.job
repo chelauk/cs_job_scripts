@@ -1,0 +1,119 @@
+#!/bin/bash -l
+#Force bash as the executing shell.
+#$ -S /bin/bash
+#$ -N coverage
+# Join the error stream to the output stream.
+#$ -j yes
+#$ -l h_rt=10:00:00
+#$ -l tmem=6G
+#$ -l h_vmem=6G
+#$ -l scratch0free=20G
+#$ -V
+
+# the script has to pass the following variables
+workplace=$1
+bamfile=$2
+referencename=$3
+capture=$4
+user=$6
+
+APPDIR=/share/apps/genomics/GenomeAnalysisTK-3.4-46/
+REFDIR=/share/apps/cto/reference/g1kh37
+referenceindex="$referencename".dict
+
+echo "the job is running on the node $HOSTNAME"
+echo "job number $JOB_ID"
+
+cd /scratch0 || exit
+if [ ! -d "$user" ]
+then
+        echo "####MESS the directory $user on /scratch0 does not exist: creating it"
+        mkdir "$user"
+        cd "$user" || exit
+else
+        echo "####MESS the directory $user on /scratch0 exists, moving to it"
+        cd "$user" || exit
+fi
+
+echo "####MESS I am now on directory:"
+pwd
+echo
+
+
+
+##################################
+# copy of the reference if needed
+##################################
+
+if [ ! -f "$referenceindex" ]
+then
+        echo "####MESS untaring the reference files to the temporary directory"
+        tar -xzf "$REFDIR"/"$referencename"\.tar.gz -C /scratch0/"$user"/
+else
+        echo "####MESS the reference already exists in the node"
+fi
+
+echo "####MESS copy reference completed"
+date
+
+##### folder creation ##############
+echo "creating the job directory"
+mkdir "$JOB_ID"
+cd "$JOB_ID" || exit
+echo "####MESS I am now on directory:"
+
+pwd
+
+##################################
+#  copy all the files necessary  #
+##################################
+
+echo "### copying the bam file"
+date
+cp "$workplace"/"$bamfile" .
+cp "$workplace"/"${bamfile:0:${#bamile}-1}"i .
+echo "### bamfile and index copy done"
+date
+echo
+echo "### copying the capture file"
+date
+cp "$capture" .
+echo "copy capture bedfile completed"
+date
+
+
+echo "### calculating the coverage over the intervals"
+date
+
+java -Xmx2g -Xms4G -jar $APPDIR/GenomeAnalysisTK.jar \
+   -R ../"$referencename".fasta \
+   -T DepthOfCoverage \
+   -o "${bamfile:0:7}".coverage \
+   -I "$bamfile" \
+   -L "$capture" \
+   --omitDepthOutputAtEachBase \
+   --interval_merging OVERLAPPING_ONLY \
+   -ct 1 -ct 5 -ct 10 -ct 30
+
+echo "### coverage calculation completed and statistics written"
+
+
+echo "### copying back the coverage results"
+cp ./*coverage "$workplace"/.
+echo "### copy completed"
+date
+
+###################################
+# deleting user folder from scratch
+###################################
+
+echo "####MESS moving to /scratch0/$user"
+date
+cd /scratch0/"$user" || exit
+echo "####MESS removing any left file"
+rm -r "$JOB_ID"
+rm ./human*
+echo "####MESS removal done"
+date
+echo "### job completed"
+date
