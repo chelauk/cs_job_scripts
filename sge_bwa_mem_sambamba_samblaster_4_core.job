@@ -5,9 +5,9 @@
 #$ -j yes
 #$ -l h_rt=12:00:00
 #$ -pe smp 4
-#$ -l h_vmem=24G
-#$ -l tmem=24G
-#$ -l scr=150G
+#$ -l h_vmem=26G
+#$ -l tmem=26G
+#$ -l scr=170G
 #$ -V
 #$ -R y
 
@@ -148,8 +148,10 @@ date
 echo "####MESS moving to /scratch0/$user"
 date
 cd /scratch0/"$user" || exit
-echo "####MESS removing any left file"
+echo "####MESS removing any  file"
 rm -r "$JOB_ID"
+## remove reference files ######### 
+rm  human*
 echo "####MESS removal done"
 date
 echo "####END job finished"
