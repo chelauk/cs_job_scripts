@@ -13,12 +13,7 @@
 
 date
 
-BWADIR=/share/apps/genomics/bwa-0.7.12
-NEWSAMDIR=/share/apps/genomics/samtools-1.2/bin
 REFDIR=/share/apps/cto/reference/g1kh37
-SAMBLASTER=/share/apps/cto/INSTALLS/samblaster-v.0.1.22
-SAMBAMBA=/share/apps/cto/INSTALLS
-
 
 # the qsub launcher has to supply, along with the working directory
 # also the following parameters
@@ -125,7 +120,7 @@ echo "Running sambamba sort $bamfile"
 
 mkdir temp
 
-sambamba_v0.5.8 sort -m 4G -t 4  "$bamfile"  --tmpdir=temp
+sambamba sort -m 4G -t 4  "$bamfile"  --tmpdir=temp
 
 date 
 
