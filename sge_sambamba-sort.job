@@ -11,10 +11,12 @@
 #$ -V
 #$ -R y
 
-SAMBAMBA=/share/apps/cto/INSTALLS
+
 workingdir=$1
 bamfile=$2
 user=$3
+
+module load sambamba
 
 echo "running sambamba sort on " $HOSTNAME
 
@@ -49,7 +51,7 @@ cp "$workingdir"/"$bamfile" .
 
 echo "Running samtools to sort $bamfile"
 
-"$SAMBAMBA"/sambamba_v0.5.8 sort -m 4G -t 4  "$bamfile"  --tmpdir=temp  "$bamfile".sorted
+sambamba sort -m 4G -t 4  "$bamfile"  --tmpdir=temp  "$bamfile".sorted
 
 ########################################
 # copy back and clean up               #
