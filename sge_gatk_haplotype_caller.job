@@ -146,7 +146,6 @@ fi
 # job completed copy back #
 ###########################
 
-
 echo "### copy the results back"
 date
 
@@ -158,6 +157,8 @@ echo "####MESS moving to /scratch0/$user"
 cd /scratch0/"$user" || exit
 echo "####MESS removing any left file"
 rm -r "$JOB_ID"
+rm ./human*
+rm 
 echo "####MESS removal done"
 date
 echo "### job completed"
