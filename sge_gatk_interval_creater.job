@@ -13,7 +13,7 @@
 #parameters to be passed to the job
 referencename=$1                          # eg human_g1k_v37
 workplace=$2                              # directory where files will be copied to and from
-bamfile=$3                                # bam file from which the intervals will be created from GATK target creatot
+bamfile=$3                               
 interval=$4                               # intervals in which we want intervals created (somewhat confusing but it could be a specific chromosome or a bed file)
 user=$5                                   # self explanatory
 
@@ -52,6 +52,8 @@ echo "$intervals"
 ############################
 
 module load samtools
+
+##########################
 
 cd /scratch0  || exit
 if [ ! -d "$user" ]
