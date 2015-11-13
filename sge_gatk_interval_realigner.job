@@ -11,6 +11,7 @@
 #$ -l scr=100G
 #$ -V
 
+
 #parameters to be passed to the job
 referencename=$1
 workplace=$2
@@ -20,65 +21,69 @@ interval=$5
 user=$6
 realigned="${bamfile:0:${#bamfile}-3}"realigned.bam
 
-#################################################
-# check if interval.bed file is given
-#################################################
+#################################################################
+# where the references, resources and  applications are located #
+#################################################################
 
-# fi interval is given as 0
-if [ "$interval" == 0 ]
- then interval=""
-# if $interval looks like bed file
-elif [[ "$interval" == *"bed" ]]
-        then cp "$workplace"/"$interval" .
-# if interval is given as a chromosome then keep it
-elif [[ "$interval" == *"[1-9A-Z]" ]]
-    then
-    :
-fi
+APPDIR=/share/apps/genomics/GenomeAnalysisTK-3.4-46
+REFDIR=/share/apps/cto/reference/g1kh37/
+RESDIR=/share/apps/cto/reference/gatk_resources
 
-indels=/share/apps/centos5/genomics/reference/queue_dbs/Mills_and_1000G_gold_standard.indels.b37.vcf
-indels2=/share/apps/centos5/genomics/reference/queue_dbs/1000G_phase1.indels.b37.vcf
-snps=/share/apps/centos5/genomics/reference/queue_dbs/dbsnp_137.b37.excluding_sites_after_129.vcf
+###############################################
+# where the references are located
+###############################################
 
-# reference and apps
-REFDIR=/share/apps/centos5/genomics/reference/chela
-APPDIR=/share/apps/genomics/GenomeAnalysisTK-3.3-0
+# todo these can be kept as bgzip file gatk can handle that
 
-referenceindex="$referencename"\.dict
+indels=$RESDIR/Mills_and_1000G_gold_standard.indels.b37.vcf.gz
+snps=$RESDIR/dbsnp_138.b37.excluding_sites_after_129.vcf.gz
 
-echo "the job is running on the node $HOSTNAME"
-echo "job number $JOB_ID"
+#############################################
+# these are the files that will be output
+#############################################
 
-cd /scratch0 || exit
+echo "file names to be created"
+
+intervals=${bamfile:0:${#bamfile}-4}\.intervals
+
+echo "$intervals"
+
+
+
+############################
+## load necessary modules ##
+############################
+
+module load samtools
+
+##########################
+
+cd /scratch0  || exit
 if [ ! -d "$user" ]
 then
 	echo "####MESS the directory $user on /scratch0/ does not exist: creating it"
 	mkdir "$user"
-	cd "$user" || exit
+	cd "$user"  || exit
 else
 	echo "####MESS the directory $user on /scratch0 exists, moving to it"
 	cd "$user"  || exit
-fi
-
-echo "####MESS I am now on directory:"
-pwd
-echo
+fi 
 
 ##################################
 # copy of the reference if needed
 ##################################
 
-if [ ! -f "$referenceindex" ]
+if [ ! -f "$referencename.fasta" ] || [ ! -f "$referencename.fasta.fai" ] || [ ! -f "$referencename.dict" ]
+
 then
 	echo "####MESS untaring the reference files to the temporary directory"
-	tar -xzf "$REFDIR"/"$referencename"\.tar.gz -C /scratch0/"$user"/
+	tar -xzf $REFDIR/"$referencename"\.tar.gz -C /scratch0/"$user"/
 else
 	echo "####MESS the reference already exists in the node"
 fi
 			
 echo "####MESS copy reference completed"
 date
-
 
 ##### folder creation ##############
 echo "creating the job directory"
@@ -127,7 +132,6 @@ cp "$workplace"/"$intervals" .
 echo "### copying the indelfile"
 date
 cp "$indels" .
-cp "$indels2" .
 cp "$snps" .
 echo "### copy completed"
 date
@@ -152,7 +156,6 @@ if  [ -z "$interval" ]
   	-targetIntervals "$intervals" \
   	--filter_bases_not_stored \
   	--knownAlleles "$indels" \
-        --knownAlleles "$indels2" \
         --knownAlleles "$snps" \
         -o "$realigned" 
 	if [ $? -eq 0 ]
@@ -181,7 +184,6 @@ else
   	-o "$realigned" \
   	-L "$interval" \
   	--knownAlleles "$indels" \
-        --knownAlleles "$indels2" \
         --knownAlleles "$snps"
         if [ $? -eq 0 ]
 	  then
