@@ -89,7 +89,7 @@ if [ "$interval" == 0 ]
  then interval=""
 # if $interval looks like bed file
 elif [[ "$interval" == *"bed" ]]
-        then cp "$workplace"/"$interval" .
+        then cp "$REFDIR"/"$interval" .
 # if interval is given as a chromosome then keep it
 elif [[ "$interval" == *"[1-9A-Z]" ]]
     then
