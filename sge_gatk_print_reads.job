@@ -23,31 +23,18 @@ bamroot="${bamfile:0:${#bamfile}-4}"
 recalbam="$bamroot"\.recal.bam
 bamindex="$bamroot"\.bai
 
-#################################################
-# check if intervals file is given
-#################################################
 
-# fi interval is given as 0
-if [ "$interval" == 0 ]
- then interval=""
-# if $interval looks like bed file
-elif [[ "$interval" == *"bed" ]]
-        then cp "$interval" .
-# if interval is given as a chromosome then keep it
-elif [[ "$interval" == *"[1-9A-Z]" ]]
-    then
-    :
-fi
+#################################################################
+# where the references, resources and  applications are located #
+#################################################################
+
+APPDIR=/share/apps/genomics/GenomeAnalysisTK-3.4-46
+REFDIR=/share/apps/cto/reference/g1kh37/
+
 
 ### load modules
 
 module load samtools
-
-
-REFDIR=/share/apps/centos5/genomics/reference/chela
-APPDIR=/share/apps/genomics/GenomeAnalysisTK-3.3-0
-
-referenceindex="$referencename"\.dict
 
 echo "the job is running on the node $HOSTNAME"
 echo "job number $JOB_ID"
@@ -71,7 +58,8 @@ echo
 # copy of the reference if needed
 ##################################
 
-if [ ! -f "$referenceindex" ]
+if [ ! -f "$referencename.fasta" ] || [ ! -f "$referencename.fasta.fai" ] || [ ! -f "$referencename.dict" ]
+
 then
 	echo "####MESS untaring the reference files to the temporary directory"
 	tar -xzf $REFDIR/"$referencename"\.tar.gz -C /scratch0/"$user"/
@@ -82,7 +70,6 @@ fi
 echo "####MESS copy reference completed"
 date
 
-
 ##### folder creation ##############
 
 echo "creating the job directory"
@@ -91,7 +78,21 @@ cd "$JOB_ID" || exit
 echo "####MESS I am now on directory:"
 pwd
 
+#################################################
+# check if intervals file is given
+#################################################
 
+# fi interval is given as 0
+if [ "$interval" == 0 ]
+ then interval=""
+# if $interval looks like bed file
+elif [[ "$interval" == *"bed" ]]
+        then cp "$REFDIR"/"$interval" .
+# if interval is given as a chromosome then keep it
+elif [[ "$interval" == *"[1-9A-Z]" ]]
+    then
+    :
+fi
 
 ##################################
 # copy all the files necessary 
