@@ -11,13 +11,15 @@
 #$ -l scr=50G
 #$ -V
 
+echo "the job is running on the node $HOSTNAME"
+echo "job number $JOB_ID"
+
 #parameters to be passed to the job
 referencename=$1
 workplace=$2
 bamfile=$3
 interval=$4
 user=$5
-
 
 #################################################################
 # where the references, resources and  applications are located #
@@ -34,9 +36,6 @@ RESDIR=/share/apps/cto/reference/gatk_resources
 # todo these can be kept as bgzip file gatk can handle that
 
 snps=$RESDIR/dbsnp_138.b37.excluding_sites_after_129.vcf.gz
-
-echo "the job is running on the node $HOSTNAME"
-echo "job number $JOB_ID"
 
 cd /scratch0 || exit
 
