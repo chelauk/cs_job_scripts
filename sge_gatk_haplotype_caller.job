@@ -10,6 +10,10 @@
 #$ -l scr=150G
 #$ -V
 
+
+echo "the job is running on the node $HOSTNAME"
+echo "job number $JOB_ID"
+
 #parameters to be passed to the job
 referencename=$1
 workplace=$2
@@ -19,10 +23,8 @@ user=$5
 
 APPDIR=/share/apps/genomics/GenomeAnalysisTK-3.4-46/
 REFDIR=/share/apps/cto/reference/g1kh37
-referenceindex="$referencename".dict
 
-echo "the job is running on the node $HOSTNAME"
-echo "job number $JOB_ID"
+
 
 cd /scratch0 || exit
 if [ ! -d "$user" ]
@@ -43,17 +45,17 @@ echo
 # copy of the reference if needed
 ##################################
 
-if [ ! -f "$referenceindex" ]
-then
-        echo "####MESS untaring the reference files to the temporary directory"
-        tar -xzf "$REFDIR"/"$referencename"\.tar.gz -C /scratch0/"$user"/
-else
-        echo "####MESS the reference already exists in the node"
-fi
+if [ ! -f "$referencename.fasta" ] || [ ! -f "$referencename.fasta.fai" ] || [ ! -f "$referencename.dict" ]
 
+then
+	echo "####MESS untaring the reference files to the temporary directory"
+	tar -xzf $REFDIR/"$referencename"\.tar.gz -C /scratch0/"$user"/
+else
+	echo "####MESS the reference already exists in the node"
+fi
+			
 echo "####MESS copy reference completed"
 date
-
 
 ##### folder creation ##############
 echo "creating the job directory"
@@ -74,7 +76,7 @@ if [ "$interval" == 0 ]
  then interval=""  # create an empty $interval variable
 # if $interval looks like bed file
 elif [[ "$interval" == *"bed" ]]
-        then cp "$interval" .
+        then cp "$REFDIR"/"$interval" .
 # if interval is given as a chromosome then keep it
 elif [[ "$interval" == *"[1-9A-Z]" ]]
     then    
@@ -149,7 +151,7 @@ fi
 echo "### copy the results back"
 date
 
-cp *.raw.vcf "$workplace"/.
+cp ./*.raw.vcf "$workplace"/.
 
 date
 
