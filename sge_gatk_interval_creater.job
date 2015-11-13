@@ -101,7 +101,7 @@ if [ "$interval" == 0 ]                      # in this case no intervals are giv
  then interval=""                                                             
 # if $interval looks like bed file
 elif [[ "$interval" == *"bed" ]]             # this procedure will copy a give bed file to the node
-        then cp "$workplace"/"$interval" .  
+        then cp "$REFDIR"/"$interval" .  
 elif [[ "$interval" == *"[1-9A-Z]" ]]	     # if interval is given as a chromosome then keep itthis will simply give the chromosome name to the variable
     then
     :
