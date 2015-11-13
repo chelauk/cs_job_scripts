@@ -38,23 +38,9 @@ RESDIR=/share/apps/cto/reference/gatk_resources
 indels=$RESDIR/Mills_and_1000G_gold_standard.indels.b37.vcf.gz
 snps=$RESDIR/dbsnp_138.b37.excluding_sites_after_129.vcf.gz
 
-#############################################
-# these are the files that will be output
-#############################################
-
-echo "file names to be created"
 
 intervals=${bamfile:0:${#bamfile}-4}\.intervals
 
-echo "$intervals"
-
-
-
-############################
-## load necessary modules ##
-############################
-
-module load samtools
 
 ##########################
 
@@ -94,6 +80,26 @@ pwd
 echo
 mkdir tmp
 
+
+
+#################################################
+# check if intervals file is given
+#################################################
+
+# fi interval is given as 0
+if [ "$interval" == 0 ]
+ then interval=""
+# if $interval looks like bed file
+elif [[ "$interval" == *"bed" ]]
+        then cp "$REFDIR"/"$interval" .
+# if interval is given as a chromosome then keep it
+elif [[ "$interval" == *"[1-9A-Z]" ]]
+    then
+    :
+fi
+
+
+
 ##################################
 # copy all the files necessary 
 ##################################
@@ -127,8 +133,8 @@ date
 
 echo "### copying the intervals file"
 date
-
 cp "$workplace"/"$intervals" .
+
 echo "### copying the indelfile"
 date
 cp "$indels" .
