@@ -10,6 +10,10 @@
 #$ -l scr=60G
 #$ -V
 
+
+echo "the job is running on the node $HOSTNAME"
+echo "job number $JOB_ID"
+
 #parameters to be passed to the job
 referencename=$1                          # eg human_g1k_v37
 workplace=$2                              # directory where files will be copied to and from
