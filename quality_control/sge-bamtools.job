@@ -38,6 +38,8 @@ cd "$JOB_ID" || exit
 cp "$workplace"/"$bamfile" .
 cp "$workplace"/"${bamfile:0:${#bamfile}-1}"i .
 
+module load bamtools
+
 bamtools stats -in "$bamfile" -insert > "$bamfile".bamtools.stats
 
 cp "$bamfile".bamtools.stats "$workplace"/.
