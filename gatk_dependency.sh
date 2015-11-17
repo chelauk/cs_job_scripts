@@ -1,5 +1,5 @@
 #!/bin/bash
-name=$1
+sample=$1
 refname=$2
 dir=$3
 ########################
@@ -43,7 +43,7 @@ fi
 # no jobs complete
 if ! [ -f "$dir"/bwa_complete ] && ! [ -f "$dir"/interval_complete ]  && ! [ -f "$dir"/realign_complete ] && ! [ -f "$dir"/recal_tab_complete ] && ! [ -f "$dir"/recal_complete ] && ! [ -f "$dir"/var_call_complete ] # if none of the jobs have completed 
 then
-  FIRST=$(qsub -wd "$dir"/log -N "bwa-$name" \
+  FIRST=$(qsub -wd "$dir"/log -N "bwa-$sample" \
   /home/sejjctj/job_scripts/sge_bwa_mem_sambamba_samblaster_4_core.job \
   "$refname" \
   "$read1" \
@@ -52,7 +52,7 @@ then
   "$user")
   echo "$FIRST"
 
-  SECOND=$(qsub -wd "$dir"/log -N "intCr-$name" -hold_jid "bwa-$name" \
+  SECOND=$(qsub -wd "$dir"/log -N "intCr-$sample" -hold_jid "bwa-$sample" \
   /home/sejjctj/job_scripts/sge_gatk_interval_creater.job \
   "$refname" \
   "$dir" \
@@ -61,7 +61,7 @@ then
   "$user")
   echo "$SECOND"
 
-  THIRD=$(qsub -wd "$dir"/log -N "realn-$name" -hold_jid "intCr-$name" \
+  THIRD=$(qsub -wd "$dir"/log -N "realn-$sample" -hold_jid "intCr-$sample" \
   /home/sejjctj/job_scripts/sge_gatk_interval_realigner.job \
   "$refname" \
   "$dir" \
@@ -71,7 +71,7 @@ then
   "$user" )
   echo "$THIRD"
 
-  FOURTH=$(qsub -wd "$dir"/log -N "reTab-$name" -hold_jid "realn-$name" \
+  FOURTH=$(qsub -wd "$dir"/log -N "reTab-$sample" -hold_jid "realn-$sample" \
   /home/sejjctj/job_scripts/sge_gatk_base_recal_table_creator.job \
   "$refname" \
   "$dir" \
@@ -80,7 +80,7 @@ then
   "$user")
   echo "$FOURTH"
 
-  FIFTH=$(qsub -wd "$dir"/log -N "recal-$name" -hold_jid "reTab-$name" \
+  FIFTH=$(qsub -wd "$dir"/log -N "recal-$sample" -hold_jid "reTab-$sample" \
   /home/sejjctj/job_scripts/sge_gatk_print_reads.job \
   "$refname" \
   "$dir" \
@@ -90,7 +90,7 @@ then
   "$user")
   echo "$FIFTH"
 
-  SIXTH=$(qsub -wd "$dir"/log -N "hapl-$name" -hold_jid "recal-$name" \
+  SIXTH=$(qsub -wd "$dir"/log -N "hapl-$sample" -hold_jid "recal-$sample" \
   /home/sejjctj/job_scripts/sge_gatk_haplotype_caller.job \
   "$refname" \
   "$dir" \
@@ -105,7 +105,7 @@ then
 elif ! [ -f "$dir"/interval_complete ]  && ! [ -f "$dir"/realign_complete ] && ! [ -f "$dir"/recal_tab_complete ] && ! [ -f "$dir"/recal_complete ] && ! [ -f "$dir"/var_call_complete ] # if bwa completed 
 then 
   
-  SECOND=$(qsub -wd "$dir"/log -N "intCr-$name"  \
+  SECOND=$(qsub -wd "$dir"/log -N "intCr-$sample"  \
   /home/sejjctj/job_scripts/sge_gatk_interval_creater.job \
   "$refname" \
   "$dir" \
@@ -114,7 +114,7 @@ then
   "$user")
   echo "$SECOND"
   
-  THIRD=$(qsub -wd "$dir"/log -N "realn-$name" -hold_jid "intCr-$name" \
+  THIRD=$(qsub -wd "$dir"/log -N "realn-$sample" -hold_jid "intCr-$sample" \
   /home/sejjctj/job_scripts/sge_gatk_interval_realigner.job \
   "$refname" \
   "$dir" \
@@ -124,7 +124,7 @@ then
   "$user" )
   echo "$THIRD"
 
-  FOURTH=$(qsub -wd "$dir"/log -N "reTab-$name" -hold_jid "realn-$name" \
+  FOURTH=$(qsub -wd "$dir"/log -N "reTab-$sample" -hold_jid "realn-$sample" \
   /home/sejjctj/job_scripts/sge_gatk_base_recal_table_creator.job \
   "$refname" \
   "$dir" \
@@ -133,7 +133,7 @@ then
   "$user")
   echo "$FOURTH"
 
-  FIFTH=$(qsub -wd "$dir"/log -N "recal-$name" -hold_jid "reTab-$name" \
+  FIFTH=$(qsub -wd "$dir"/log -N "recal-$sample" -hold_jid "reTab-$sample" \
   /home/sejjctj/job_scripts/sge_gatk_print_reads.job \
   "$refname" \
   "$dir" \
@@ -143,7 +143,7 @@ then
   "$user")
   echo "$FIFTH"
 
-  SIXTH=$(qsub -wd "$dir"/log -N "hapl-$name" -hold_jid "recal-$name" \
+  SIXTH=$(qsub -wd "$dir"/log -N "hapl-$sample" -hold_jid "recal-$sample" \
   /home/sejjctj/job_scripts/sge_gatk_haplotype_caller.job \
   "$refname" \
   "$dir" \
@@ -158,7 +158,7 @@ then
 elif ! [ -f "$dir"/realign_complete ] && ! [ -f "$dir"/recal_tab_complete ] && ! [ -f "$dir"/recal_complete ] && ! [ -f "$dir"/var_call_complete ] # if interval creation has completed
 then 
   
-  THIRD=$(qsub -wd "$dir"/log -N "realn-$name" \
+  THIRD=$(qsub -wd "$dir"/log -N "realn-$sample" \
   /home/sejjctj/job_scripts/sge_gatk_interval_realigner.job \
   "$refname" \
   "$dir" \
@@ -168,7 +168,7 @@ then
   "$user" )
   echo "$THIRD"
   
-  FOURTH=$(qsub -wd "$dir"/log -N "reTab-$name" -hold_jid "realn-$name" \
+  FOURTH=$(qsub -wd "$dir"/log -N "reTab-$sample" -hold_jid "realn-$sample" \
   /home/sejjctj/job_scripts/sge_gatk_base_recal_table_creator.job \
   "$refname" \
   "$dir" \
@@ -177,7 +177,7 @@ then
   "$user")
   echo "$FOURTH"
 
-  FIFTH=$(qsub -wd "$dir"/log -N "recal-$name" -hold_jid "reTab-$name" \
+  FIFTH=$(qsub -wd "$dir"/log -N "recal-$sample" -hold_jid "reTab-$sample" \
   /home/sejjctj/job_scripts/sge_gatk_print_reads.job \
   "$refname" \
   "$dir" \
@@ -187,7 +187,7 @@ then
   "$user")
   echo "$FIFTH"
   
-  SIXTH=$(qsub -wd "$dir"/log -N "hapl-$name" -hold_jid "recal-$name" \
+  SIXTH=$(qsub -wd "$dir"/log -N "hapl-$sample" -hold_jid "recal-$sample" \
   /home/sejjctj/job_scripts/sge_gatk_haplotype_caller.job \
   "$refname" \
   "$dir" \
@@ -202,7 +202,7 @@ then
 elif ! [ -f "$dir"/recal_tab_complete ] && ! [ -f "$dir"/recal_complete ] &&  ! [ -f "$dir"/var_call_complete ] # if realign has completed
   then
 
-  FOURTH=$(qsub -wd "$dir"/log -N "reTab-$name"  \
+  FOURTH=$(qsub -wd "$dir"/log -N "reTab-$sample"  \
   /home/sejjctj/job_scripts/sge_gatk_base_recal_table_creator.job \
   "$refname" \
   "$dir" \
@@ -211,7 +211,7 @@ elif ! [ -f "$dir"/recal_tab_complete ] && ! [ -f "$dir"/recal_complete ] &&  ! 
   "$user")
   echo "$FOURTH"
 
-  FIFTH=$(qsub -wd "$dir"/log -N "recal-$name"  -hold_jid "reTab-$name" \
+  FIFTH=$(qsub -wd "$dir"/log -N "recal-$sample"  -hold_jid "reTab-$sample" \
   /home/sejjctj/job_scripts/sge_gatk_print_reads.job \
   "$refname" \
   "$dir" \
@@ -221,7 +221,7 @@ elif ! [ -f "$dir"/recal_tab_complete ] && ! [ -f "$dir"/recal_complete ] &&  ! 
   "$user")
   echo "$FIFTH"
   
-  SIXTH=$(qsub -wd "$dir"/log -N "hapl-$name" -hold_jid "recal-$name" \
+  SIXTH=$(qsub -wd "$dir"/log -N "hapl-$sample" -hold_jid "recal-$sample" \
   /home/sejjctj/job_scripts/sge_gatk_haplotype_caller.job \
   "$refname" \
   "$dir" \
@@ -235,7 +235,7 @@ elif ! [ -f "$dir"/recal_tab_complete ] && ! [ -f "$dir"/recal_complete ] &&  ! 
 elif ! [ -f "$dir"/recal_complete ] && ! [ -f "$dir"/var_call_complete ] # if recal table has been created 
   then
 
-  FIFTH=$(qsub -wd "$dir"/log -N "recal-$name"  \
+  FIFTH=$(qsub -wd "$dir"/log -N "recal-$sample"  \
   /home/sejjctj/job_scripts/sge_gatk_print_reads.job \
   "$refname" \
   "$dir" \
@@ -245,7 +245,7 @@ elif ! [ -f "$dir"/recal_complete ] && ! [ -f "$dir"/var_call_complete ] # if re
   "$user")
   echo "$FIFTH"
 
-  SIXTH=$(qsub -wd "$dir"/log -N "hapl-$name" -hold_jid "recal-$name" \
+  SIXTH=$(qsub -wd "$dir"/log -N "hapl-$sample" -hold_jid "recal-$sample" \
   /home/sejjctj/job_scripts/sge_gatk_haplotype_caller.job \
   "$refname" \
   "$dir" \
@@ -256,7 +256,7 @@ elif ! [ -f "$dir"/recal_complete ] && ! [ -f "$dir"/var_call_complete ] # if re
 
 elif ! [ -f "$dir"/var_call_complete ] # if recalibration is complete
   then
-  SIXTH=$(qsub -wd "$dir"/log -N "hapl-$name"  \
+  SIXTH=$(qsub -wd "$dir"/log -N "hapl-$sample"  \
   /home/sejjctj/job_scripts/sge_gatk_haplotype_caller.job \
   "$refname" \
   "$dir" \
