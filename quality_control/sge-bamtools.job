@@ -1,12 +1,12 @@
 #Force bash as the executing shell.
 #$ -S /bin/bash
-#$ -N coverage
+#$ -N bam_stats
 # Join the error stream to the output stream.
 #$ -j yes
 #$ -l h_rt=10:00:00
 #$ -l tmem=6G
 #$ -l h_vmem=6G
-#$ -l scratch0free=00G
+#$ -l scratch0free=80G
 #$ -V
 
 echo "Job runing on " "$HOSTNAME"
