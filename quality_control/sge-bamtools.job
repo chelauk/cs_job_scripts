@@ -1,0 +1,49 @@
+#Force bash as the executing shell.
+#$ -S /bin/bash
+#$ -N coverage
+# Join the error stream to the output stream.
+#$ -j yes
+#$ -l h_rt=10:00:00
+#$ -l tmem=6G
+#$ -l h_vmem=6G
+#$ -l scratch0free=00G
+#$ -V
+
+echo "Job runing on " "$HOSTNAME"
+
+# the script has to pass the following variables
+workplace=$1
+bamfile=$2
+user=$3
+
+
+# check if $user directory exitsts
+
+
+cd /scratch0/  || exit
+
+
+if ! [ -d "$user" ]
+  then
+    mkdir "$user"
+    cd "$user" || exit
+else
+   cd "$user" || exit
+fi
+
+mkdir "$JOB_ID"
+
+cd "$JOB_ID" || exit
+
+cp "$workplace"/"$bamfile" .
+cp "$workplace"/"${bamfile:0:${#bamfile}-1}"i .
+
+bamtools stats -in "$bamfile" -insert > "$bamfile".bamtools.stats
+
+cp "$bamfile".bamtools.stats "$workplace"/.
+
+cd ..
+
+rm -r "$JOB_ID"
+
+echo "job done"
