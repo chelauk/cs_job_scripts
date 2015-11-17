@@ -1,5 +1,5 @@
 #!/bin/bash
-sample=$1
+name=$1
 refname=$2
 dir=$3
 ########################
