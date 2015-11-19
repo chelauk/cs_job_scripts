@@ -1,31 +1,28 @@
 #!/bin/bash -l
 #$ -S /bin/bash
-#$ -N bamutilCHR
-#$ -M chela.james@ucl.ac.uk
-#$ -m be
+#$ -N chr_split
 #$ -j yes
-#$ -l scr=15G
-#$ -l h_rt=6:30:00
-#$ -l h_vmem=3G
-#$ -l tmem=3G
+#$ -l scr=50G
+#$ -l h_rt=2:30:00
+#$ -l h_vmem=16G
+#$ -l tmem=16G
 #$ -V
 
 workplace=$1
 bamfile=$2
 user=$3
-output=$4
 
 echo "---parameters received-----"
 echo "$workplace"
 echo "$bamfile"
-echo "$output"
 echo "==========================="
 echo
 
-BAMUTIL=/share/apps/genomics/bamUtil-master/bin
 
 echo "the job is running on the node $HOSTNAME"
 echo "job number $JOB_ID"
+
+module load bamtools
 
 #######################################
 # user folder creation
@@ -56,21 +53,22 @@ date
 echo "####MESS copying $workplace/$bamfile to temp directory"
 date
 cp "$workplace"/"$bamfile" .
+cp "$workplace"/"$bamfile".bai .
 echo "####MESS copy completed"
 date
 
 echo "======= splitting into chromsomes ========" 
 
 
-echo "####MESS starting the bamUtils split chromosome"
+echo "####MESS starting the bamtools split by chromosome"
 date
-$BAMUTIL/bam splitChromosome --in "$bamfile" --out "$output" 
+bamtools split -in "$bamfile" -reference
 echo "####MESS split completed"
 date
 
 echo "## copying back"
 ls -l
-cp "$output"* "$workplace"/.
+cp ./*REF* "$workplace"/.
 echo "## copying done"
 date
 
