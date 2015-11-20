@@ -2,10 +2,10 @@
 #$ -S /bin/bash
 #$ -N sam_merge
 #$ -j yes
-#$ -l scr=200G
+#$ -l scr=100G
 #$ -l h_rt=12:00:00
-#$ -l h_vmem=4G
-#$ -l tmem=4G
+#$ -l h_vmem=16G
+#$ -l tmem=16G
 #$ -V
 
 workplace=$1
@@ -19,8 +19,11 @@ readgroup="$output_prefix"\.bam
 library="GOSgene"
 array=( $(ls "$workplace"/lane*/"$prefix"*\.bam) )
 
-PICARD=/share/apps/genomics/picard-1.130/dist
-SAMTOOLS=/share/apps/genomics/samtools-1.2/bin
+
+module load samtools
+# I don't load picard-tools as module because I want to give java -jar options
+
+PICARD=/share/apps/cto/packages/Picard-tools/1.140/
 
 echo "---parameters received-----"
 echo "workplace " "$workplace"
@@ -29,8 +32,6 @@ echo "user " "$user"
 echo "output_prefix " "$output_prefix"
 echo "==========================="
 echo
-
-
 
 echo "the job is running on the node $HOSTNAME"
 echo "job number $JOB_ID"
@@ -101,13 +102,14 @@ date
 
 echo "samtools merge -cp -h $bam1 $output_prefix.bam $vars"
 
-"$SAMTOOLS"/samtools merge -cp -h $bam1 $output_prefix.bam $vars
+samtools merge -cp -h $bam1 $output_prefix.bam $vars
 
 date
 
 echo "index with samtools"
 
-$SAMTOOLS/samtools index "$output_prefix"\.bam
+samtools index "$output_prefix"\.bam
+
 date
 
 ls -l
@@ -117,9 +119,9 @@ ls -l
 
 mkdir tmp
 
-echo "java -Djava.io.tmpdir=tmp -Xmx10g -Xms4g -jar $PICARD/picard.jar AddOrReplaceReadGroups INPUT=$output_prefix\.bam OUTPUT=$output_prefix\.rg\.bam VALIDATION_STRINGENCY=LENIENT SORT_ORDER=coordinate RGID=$readgroup RGLB=$library RGPL=$platform RGSM=$sample RGPU=$platform 1>$workplace/diag"
+echo "java -Djava.io.tmpdir=tmp -Xmx10g -Xms2g -jar $PICARD/picard.jar AddOrReplaceReadGroups INPUT=$output_prefix\.bam OUTPUT=$output_prefix\.rg\.bam VALIDATION_STRINGENCY=LENIENT SORT_ORDER=coordinate RGID=$readgroup RGLB=$library RGPL=$platform RGSM=$sample RGPU=$platform 1>$workplace/diag"
 
-java -Djava.io.tmpdir=tmp -Xmx2g -Xms2g -jar "$PICARD"/picard.jar AddOrReplaceReadGroups INPUT="$output_prefix"\.bam OUTPUT="$output_prefix"\.rg\.bam VALIDATION_STRINGENCY=LENIENT SORT_ORDER=coordinate RGID="$readgroup" RGLB="$library" RGPL="$platform" RGSM="$sample" RGPU=$platform 1>"$workplace"/diag
+java -Djava.io.tmpdir=tmp -Xmx12g -Xms4g -jar "$PICARD"/picard.jar AddOrReplaceReadGroups INPUT="$output_prefix"\.bam OUTPUT="$output_prefix"\.rg\.bam VALIDATION_STRINGENCY=LENIENT SORT_ORDER=coordinate RGID="$readgroup" RGLB="$library" RGPL="$platform" RGSM="$sample" RGPU=$platform 1>"$workplace"/diag
 date
 
 ls -lh
@@ -127,7 +129,7 @@ ls -lh
 rm -r tmp
 echo "index with samtools"
 
-"$SAMTOOLS"/samtools index "$output_prefix"\.rg\.bam
+samtools index "$output_prefix"\.rg\.bam
 date
 
 #############
