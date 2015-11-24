@@ -137,7 +137,7 @@ if  [ -z "$interval" ]
         java -Xmx2g -Xms2g  \
     	-jar $APPDIR/GenomeAnalysisTK.jar \
    	-T BaseRecalibrator \
-        -nct 8 \
+        -nct 4 \
    	-R /scratch0/"$user"/"$referencename"\.fasta \
    	-I "$bamfile" \
    	-knownSites "$snps" \
