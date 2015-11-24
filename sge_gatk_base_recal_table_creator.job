@@ -134,7 +134,7 @@ date
 # check if $intevals is empty
 if  [ -z "$interval" ]
    then
-        java -Xmx4g -Xms4g -XX:ParallelGCThreads=4 \
+        java -Xmx6g -Xms6g -XX:ParallelGCThreads=4 \
     	-jar $APPDIR/GenomeAnalysisTK.jar \
    	-T BaseRecalibrator \
         -nct 4 \
@@ -148,7 +148,7 @@ if  [ -z "$interval" ]
           touch "$workplace"/recal_tab_complete
 	fi
 else 
-	java -Xmx4g -Xms4g  -XX:ParallelGCThreads=4 \
+	java -Xmx6g -Xms6g  -XX:ParallelGCThreads=4 \
     	-jar "$APPDIR"/GenomeAnalysisTK.jar \
    	-T BaseRecalibrator \
         -nct 4 \
