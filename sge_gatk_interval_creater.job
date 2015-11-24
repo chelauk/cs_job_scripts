@@ -2,11 +2,12 @@
 # Force bash as the executing shell.
 #$ -S /bin/bash
 #$ -N interval
+#$ -pe smp 4
 # Join the error stream to the output stream.
 #$ -j yes
 #$ -l h_rt=12:00:00
-#$ -l h_vmem=36G
-#$ -l tmem=36G
+#$ -l h_vmem=4G
+#$ -l tmem=4G
 #$ -l scr=60G
 #$ -V
 
@@ -151,7 +152,8 @@ if  [ -z "$interval" ]
 	echo "creating intervals file"
 	
 	java -Xms2g -Xmx2g -jar "$APPDIR"/GenomeAnalysisTK.jar \
-   	-nt 16 \
+   	-XX:ParallelGCThreads=4 \
+   	-nt 4 \
         -I "$bamfile" \
    	-R /scratch0/"$user"/"$referencename".fasta \
    	-T RealignerTargetCreator \
@@ -171,8 +173,9 @@ else
 	date
 
 	java -Xms2g -Xmx2g -jar "$APPDIR"/GenomeAnalysisTK.jar \
+	-XX:ParallelGCThreads=4 \
    	-I "$bamfile" \
-        -nt 16 \
+        -nt 4 \
    	-R /scratch0/"$user"/"$referencename".fasta \
    	-T RealignerTargetCreator \
    	-L "$interval" \
