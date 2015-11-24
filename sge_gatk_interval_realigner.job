@@ -7,8 +7,7 @@
 #$ -l h_rt=12:00:00
 #$ -l h_vmem=6G
 #$ -l tmem=6G
-#$ -pe smp 4
-#$ -l scr=100G
+#$ -l scr=50G
 #$ -V
 
 echo "the job is running on the node $HOSTNAME"
@@ -153,7 +152,7 @@ if  [ -z "$interval" ]
 	echo "### realigning the bam"
 	date
 
-	java -Xms4g -Xmx4g -Djava.io.tmpdir=tmp \
+	java -XX:ParallelGCThreads=1 -Xms4g -Xmx4g -Djava.io.tmpdir=tmp \
   	-jar "$APPDIR"/GenomeAnalysisTK.jar \
         -I "$bamfile" \
   	-R /scratch0/"$user"/"$referencename"\.fasta \
@@ -179,7 +178,7 @@ else
 	echo "### realigning the bam"
 	date
 
-	java -Xmx4g -Xms4g -Djava.io.tmpdir=tmp \
+	java java -XX:ParallelGCThreads=1 -Xmx4g -Xms4g -Djava.io.tmpdir=tmp \
   	-jar "$APPDIR"/GenomeAnalysisTK.jar \
   	-I "$bamfile" \
   	-R /scratch0/"$user"/"$referencename"\.fasta \
