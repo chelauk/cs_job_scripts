@@ -1,0 +1,121 @@
+#$ -S /bin/bash
+#$ -N batch_exome
+#$ -j yes
+#$ -l h_rt=30:00:00
+#$ -l h_vmem=4G
+#$ -l tmem=4G
+#$ -l scratch0free=20G
+#### V tells qsub to load your environment
+#$ -V
+#$ -cwd
+
+REFDIR=/share/apps/cto/reference/g1kh37/
+CAPDIR=/home/sejjctj/capture_files/
+SCRIPTDIR=/home/sejjctj/job_scripts/
+workplace=$1
+user=$2
+bamfiles=$3
+reference=human_g1k_v37
+
+echo "$user"
+echo "the job is running on the node $HOSTNAME"
+echo "job number $JOB_ID"
+
+##############################################
+# user folder creation
+##############################################
+
+cd /scratch0 || exit
+if [ ! -d "$user" ]
+then
+    echo "####MESS the directory $user on /scratch0/ does not exist: creating it"
+    mkdir "$user"
+    cd "$user"  || exit
+else
+    echo "####MESS the directory $user on /scratch0/ exists, moving to it"
+    cd "$user" || exit
+fi
+
+echo "####MESS I am now in directory"
+pwd
+echo
+
+##################################
+# copy of the reference if needed
+##################################
+
+cp "$REFDIR"/"$reference".fasta .
+
+ls
+			
+#################################
+# copy bed file
+#################################
+
+cp "$CAPDIR"/sureselect_ext200.bed .
+
+
+###############################################
+# job folder creation
+###############################################
+
+echo "creating job directory"
+mkdir "$JOB_ID"
+cd "$JOB_ID"  || exit
+echo "####MESS I am now on directory:"
+pwd
+echo
+
+###################
+# copy necessary files
+###################
+
+cp "$workplace"/"$bamfiles" .
+cp "$SCRIPTDIR"/simple_counter_GC.R .
+
+echo "$PWD"/*
+
+#################################
+# unload generic R and load preferred R  #
+################################
+
+module unload R
+module load module load r/3.2.2
+
+####################
+# execute the Rscript
+####################
+
+
+echo
+echo "### executing R script for coverage"
+date
+
+R CMD BATCH simple_counter_GC.R 2>error
+
+
+###########################
+# copy files back
+##########################
+
+echo "copying files back"
+
+cp ./*Rout "$workplace"/.
+cp ./*csv "$workplace"/.
+cp error "$workplace"/.
+
+#############################################
+# delete job folder from scratch
+#############################################
+
+echo "####MESS moving to /scratch0/$user"
+date
+cd /scratch0/"$user" || exit
+echo "####MESS removing any left file"
+rm -r "$JOB_ID"
+rm "$reference".fasta
+
+echo "####MESS removal done"
+date
+echo "### job completed"
+date
