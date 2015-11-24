@@ -6,8 +6,8 @@
 # Join the error stream to the output stream.
 #$ -j yes
 #$ -l h_rt=12:00:00
-#$ -l h_vmem=16G
-#$ -l tmem=16G
+#$ -l h_vmem=4G
+#$ -l tmem=4G
 #$ -l scr=60G
 #$ -V
 
@@ -142,6 +142,12 @@ echo "### copy completed"
 date
 
 ls -lhrt
+
+# Memory considerations for multi-threading
+# Each data thread needs to be given the full amount of memory you’d normally give a single run. So if you’re running a 
+# tool that normally requires 2 Gb of memory to run, if you use -nt 4, the multithreaded run will use 8 Gb of memory. 
+# In contrast, CPU threads will share the memory allocated to their “mother” data thread, so you don’t need to worry about 
+# allocating memory based on the number of CPU threads you use.
 
 echo "# check if $interval is empty"
 
