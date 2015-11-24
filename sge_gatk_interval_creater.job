@@ -151,8 +151,7 @@ if  [ -z "$interval" ]
 	echo "no bed or chromosome given"
 	echo "creating intervals file"
 	
-	java -Xms2g -Xmx2g -jar "$APPDIR"/GenomeAnalysisTK.jar \
-   	-XX:ParallelGCThreads=4 \
+	java -XX:ParallelGCThreads=4 -Xms2g -Xmx2g -jar "$APPDIR"/GenomeAnalysisTK.jar \
    	-nt 4 \
         -I "$bamfile" \
    	-R /scratch0/"$user"/"$referencename".fasta \
@@ -172,8 +171,7 @@ else
 	echo "### creating the intervals"
 	date
 
-	java -Xms2g -Xmx2g -jar "$APPDIR"/GenomeAnalysisTK.jar \
-	-XX:ParallelGCThreads=4 \
+	java -XX:ParallelGCThreads=4 -Xms2g -Xmx2g -jar "$APPDIR"/GenomeAnalysisTK.jar  \
    	-I "$bamfile" \
         -nt 4 \
    	-R /scratch0/"$user"/"$referencename".fasta \
