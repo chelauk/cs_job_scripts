@@ -134,7 +134,7 @@ date
 # check if $intevals is empty
 if  [ -z "$interval" ]
    then
-        java -Xmx4g -Xms4g  \
+        java -Xmx2g -Xms2g  \
     	-jar $APPDIR/GenomeAnalysisTK.jar \
    	-T BaseRecalibrator \
         -nct 8 \
@@ -148,10 +148,10 @@ if  [ -z "$interval" ]
           touch "$workplace"/recal_tab_complete
 	fi
 else 
-	java -Xmx4g -Xms4g  \
+	java -Xmx2g -Xms2g  \
     	-jar "$APPDIR"/GenomeAnalysisTK.jar \
    	-T BaseRecalibrator \
-        -nct 8 \
+        -nct 4 \
    	-R /scratch0/"$user"/"$referencename"\.fasta \
    	-I "$bamfile" \
    	-L "$interval" \
