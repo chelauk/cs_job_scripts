@@ -14,6 +14,10 @@ CAPDIR=/home/sejjctj/capture_files/
 SCRIPTDIR=/home/sejjctj/job_scripts/
 workplace=$1
 user=$2
+######################################################################
+# this should be in a form that will allow copy of required bamfiles #
+######################################################################
+
 bamfiles=$3
 reference=human_g1k_v37
 
@@ -21,9 +25,9 @@ echo "$user"
 echo "the job is running on the node $HOSTNAME"
 echo "job number $JOB_ID"
 
-##############################################
-# user folder creation
-##############################################
+#########################
+# user folder creation  #
+#########################
 
 cd /scratch0 || exit
 if [ ! -d "$user" ]
@@ -40,24 +44,22 @@ echo "####MESS I am now in directory"
 pwd
 echo
 
-##################################
-# copy of the reference if needed
-##################################
+#####################################
+# cp reference to working directory #
+#####################################
 
 cp "$REFDIR"/"$reference".fasta .
-
 ls
 			
-#################################
-# copy bed file
-#################################
+##################
+# copy bed file  #
+##################
 
 cp "$CAPDIR"/sureselect_ext200.bed .
 
-
-###############################################
-# job folder creation
-###############################################
+#######################
+# job folder creation #
+#######################
 
 echo "creating job directory"
 mkdir "$JOB_ID"
@@ -66,33 +68,39 @@ echo "####MESS I am now on directory:"
 pwd
 echo
 
-###################
-# copy necessary files
-###################
+########################
+# copy necessary files #
+########################
 
-cp "$workplace"/"$bamfiles" .
-cp "$SCRIPTDIR"/simple_counter_GC.R .
+cp "$workplace"/"$bamfiles"* .
+
+ls *bam > bamfiles
 
 echo "$PWD"/*
 
-#################################
+##########################################
 # unload generic R and load preferred R  #
-################################
+##########################################
 
 module unload R
 module load module load r/3.2.2
 
-####################
-# execute the Rscript
-####################
+##################################
+# create and execute the Rscript #
+##################################
 
+echo "library(ExomeDepth)
+SureLoc <- read.table('../sureselect_ext200.bed', header = TRUE)
+source('bam.files')
+myCount <- getBamCounts(bed.frame = SureLoc, bam.files = my.bam, include.chr = FALSE, referenceFasta = '../human_g1k_v37.fasta')
+myCount.dafr <- as(myCount[, colnames(myCount)], 'data.frame')
+write.csv(myCount.dafr, 'data_GC.csv') " > simple_counter_GC.R 
 
 echo
 echo "### executing R script for coverage"
 date
 
 R CMD BATCH simple_counter_GC.R 2>error
-
 
 ###########################
 # copy files back
