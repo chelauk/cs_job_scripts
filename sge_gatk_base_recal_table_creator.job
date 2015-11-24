@@ -6,8 +6,8 @@
 #$ -j yes
 #$ -pe smp 4
 #$ -l h_rt=12:00:00
-#$ -l h_vmem=4G
-#$ -l tmem=4G
+#$ -l h_vmem=1G
+#$ -l tmem=1G
 #$ -l scr=50G
 #$ -V
 
