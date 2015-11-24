@@ -6,8 +6,8 @@
 # Join the error stream to the output stream.
 #$ -j yes
 #$ -l h_rt=12:00:00
-#$ -l h_vmem=4G
-#$ -l tmem=4G
+#$ -l h_vmem=16G
+#$ -l tmem=16G
 #$ -l scr=60G
 #$ -V
 
@@ -151,7 +151,7 @@ if  [ -z "$interval" ]
 	echo "no bed or chromosome given"
 	echo "creating intervals file"
 	
-	java -XX:ParallelGCThreads=4 -Xms2g -Xmx2g -jar "$APPDIR"/GenomeAnalysisTK.jar \
+	java -XX:ParallelGCThreads=4 -Xms12g -Xmx12g -jar "$APPDIR"/GenomeAnalysisTK.jar \
    	-nt 4 \
         -I "$bamfile" \
    	-R /scratch0/"$user"/"$referencename".fasta \
@@ -171,7 +171,7 @@ else
 	echo "### creating the intervals"
 	date
 
-	java -XX:ParallelGCThreads=4 -Xms2g -Xmx2g -jar "$APPDIR"/GenomeAnalysisTK.jar  \
+	java -XX:ParallelGCThreads=4 -Xms12g -Xmx12g -jar "$APPDIR"/GenomeAnalysisTK.jar  \
    	-I "$bamfile" \
         -nt 4 \
    	-R /scratch0/"$user"/"$referencename".fasta \
