@@ -6,9 +6,9 @@
 #$ -j yes
 #$ -pe smp 4
 #$ -l h_rt=12:00:00
-#$ -l h_vmem=4G
-#$ -l tmem=4G
-#$ -l scr=100G
+#$ -l h_vmem=2G
+#$ -l tmem=2G
+#$ -l scr=50G
 #$ -V
 
 echo "the job is running on the node $HOSTNAME"
@@ -126,9 +126,9 @@ date
 # check if $intevals is empty
 if  [ -z "$interval" ]
    then
- 	java -Xmx4g -Xms4g  \
+ 	java -XX:ParallelGCThreads=4 -Xmx4g -Xms4g  \
    	-jar $APPDIR/GenomeAnalysisTK.jar \
-   	-nct 8 \
+   	-nct 4 \
         -T PrintReads \
    	-R /scratch0/"$user"/"$referencename"\.fasta \
    	-I "$bamfile" \
@@ -140,10 +140,10 @@ if  [ -z "$interval" ]
           touch "$workplace"/recal_complete
         fi
 else
-   	java -Xmx4g -Xms4g  \
+   	java -XX:ParallelGCThreads=4 -Xmx4g -Xms4g  \
 	-jar $APPDIR/GenomeAnalysisTK.jar \
         -T PrintReads \
-        -nct 8 \
+        -nct 4 \
    	-R /scratch0/"$user"/"$referencename"\.fasta \
    	-L "$interval" \
    	-I "$bamfile" \
