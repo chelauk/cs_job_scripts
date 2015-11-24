@@ -101,7 +101,7 @@ if  [ -z "$interval" ]
 # run haplotype caller with no intervals
 #########################################
 
-   java -Xmx16g -Djava.io.tmpdir=tmp \
+   java -XX:ParallelGCThreads=1 -Xmx16g -Djava.io.tmpdir=tmp \
    -jar "$APPDIR"/GenomeAnalysisTK.jar \
    -T HaplotypeCaller \
    -R ../"$referencename".fasta \
@@ -124,7 +124,7 @@ else
 # run haplotype caller with intervals
 #########################################
 
-   java -Xmx16g -Djava.io.tmpdir=tmp \
+   java -XX:ParallelGCThreads=1 -Xmx16g -Djava.io.tmpdir=tmp \
    -jar "$APPDIR"/GenomeAnalysisTK.jar \
    -T HaplotypeCaller \
    -R ../"$referencename".fasta \
