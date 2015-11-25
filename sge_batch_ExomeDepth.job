@@ -13,7 +13,8 @@ CAPDIR=/home/sejjctj/capture_files/
 SCRIPTDIR=/home/sejjctj/job_scripts/
 workplace=$1
 bam_list=$2
-user=$3
+bai_list=$3
+user=$4
 reference=human_g1k_v37
 
 echo "$user"
@@ -69,7 +70,7 @@ echo
 ########################
 
 cp "$workplace"/"$bam_list" .
-
+cp "$workplace"/"$bai_list" .
 echo "$PWD"/*
 
 ##########################################
@@ -86,7 +87,8 @@ module load r/3.2.2
 echo "library(ExomeDepth, lib.loc='/share/apps/cto/rlib')
 SureLoc <- read.table('../sureselect_ext200.bed', header = TRUE)
 source('bam.list')
-myCount <- getBamCounts(bed.frame = SureLoc, bam.files = my.bam, include.chr = FALSE, referenceFasta = '../human_g1k_v37.fasta')
+source('bai.list')
+myCount <- getBamCounts(bed.frame = SureLoc, bam.files = my.bam, index.files = my.bai, include.chr = FALSE, referenceFasta = '../human_g1k_v37.fasta')
 myCount.dafr <- as(myCount[, colnames(myCount)], 'data.frame')
 write.csv(myCount.dafr, 'data_GC.csv') " > simple_counter_GC.R 
 
