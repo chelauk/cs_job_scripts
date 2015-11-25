@@ -7,7 +7,6 @@
 #$ -l scratch0free=20G
 #### V tells qsub to load your environment
 #$ -V
-#$ -cwd
 
 REFDIR=/share/apps/cto/reference/g1kh37/
 CAPDIR=/home/sejjctj/capture_files/
@@ -45,7 +44,7 @@ echo
 #####################################
 
 cp "$REFDIR"/"$reference".fasta .
-ls
+ls -l
 			
 ##################
 # copy bed file  #
@@ -53,6 +52,7 @@ ls
 
 cp "$CAPDIR"/sureselect_ext200.bed .
 
+ls -l
 #######################
 # job folder creation #
 #######################
@@ -76,14 +76,14 @@ echo "$PWD"/*
 # unload generic R and load preferred R  #
 ##########################################
 
-module unload R
+module unload r
 module load r/3.2.2
 
 ##################################
 # create and execute the Rscript #
 ##################################
 
-echo "library(ExomeDepth, lib.loc="/share/apps/cto/rlib")
+echo "library(ExomeDepth, lib.loc='/share/apps/cto/rlib')
 SureLoc <- read.table('../sureselect_ext200.bed', header = TRUE)
 source('bam.list')
 myCount <- getBamCounts(bed.frame = SureLoc, bam.files = my.bam, include.chr = FALSE, referenceFasta = '../human_g1k_v37.fasta')
