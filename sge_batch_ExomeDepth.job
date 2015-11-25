@@ -13,12 +13,8 @@ REFDIR=/share/apps/cto/reference/g1kh37/
 CAPDIR=/home/sejjctj/capture_files/
 SCRIPTDIR=/home/sejjctj/job_scripts/
 workplace=$1
-user=$2
-######################################################################
-# this should be in a form that will allow copy of required bamfiles #
-######################################################################
-
-bamfiles=$3
+bam_list=$2
+user=$3
 reference=human_g1k_v37
 
 echo "$user"
@@ -72,9 +68,7 @@ echo
 # copy necessary files #
 ########################
 
-cp "$workplace"/"$bamfiles"* .
-
-ls *bam > bamfiles
+cp "$workplace"/"$bam_list" .
 
 echo "$PWD"/*
 
