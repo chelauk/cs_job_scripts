@@ -77,7 +77,7 @@ echo "$PWD"/*
 ##########################################
 
 module unload R
-module load module load r/3.2.2
+module load r/3.2.2
 
 ##################################
 # create and execute the Rscript #
