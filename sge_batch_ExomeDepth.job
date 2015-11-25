@@ -83,7 +83,7 @@ module load module load r/3.2.2
 # create and execute the Rscript #
 ##################################
 
-echo "library(ExomeDepth)
+echo "library(ExomeDepth, lib.loc="/share/apps/cto/rlib")
 SureLoc <- read.table('../sureselect_ext200.bed', header = TRUE)
 source('bam.list')
 myCount <- getBamCounts(bed.frame = SureLoc, bam.files = my.bam, include.chr = FALSE, referenceFasta = '../human_g1k_v37.fasta')
