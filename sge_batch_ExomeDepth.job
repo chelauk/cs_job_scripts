@@ -85,7 +85,7 @@ module load module load r/3.2.2
 
 echo "library(ExomeDepth)
 SureLoc <- read.table('../sureselect_ext200.bed', header = TRUE)
-source('bam.files')
+source('bam.list')
 myCount <- getBamCounts(bed.frame = SureLoc, bam.files = my.bam, include.chr = FALSE, referenceFasta = '../human_g1k_v37.fasta')
 myCount.dafr <- as(myCount[, colnames(myCount)], 'data.frame')
 write.csv(myCount.dafr, 'data_GC.csv') " > simple_counter_GC.R 
