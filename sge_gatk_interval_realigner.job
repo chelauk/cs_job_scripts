@@ -152,8 +152,7 @@ if  [ -z "$interval" ]
 	echo "### realigning the bam"
 	date
 
-	java -XX:ParallelGCThreads=1 -Xms4g -Xmx4g -Djava.io.tmpdir=tmp \
-  	-jar "$APPDIR"/GenomeAnalysisTK.jar \
+	java -XX:ParallelGCThreads=1 -Xms4g -Xmx4g -Djava.io.tmpdir=tmp -jar "$APPDIR"/GenomeAnalysisTK.jar \
         -I "$bamfile" \
   	-R /scratch0/"$user"/"$referencename"\.fasta \
   	-T IndelRealigner \
@@ -178,8 +177,7 @@ else
 	echo "### realigning the bam"
 	date
 
-	java java -XX:ParallelGCThreads=1 -Xmx4g -Xms4g -Djava.io.tmpdir=tmp \
-  	-jar "$APPDIR"/GenomeAnalysisTK.jar \
+	java java -XX:ParallelGCThreads=1 -Xmx4g -Xms4g -Djava.io.tmpdir=tmp -jar "$APPDIR"/GenomeAnalysisTK.jar \
   	-I "$bamfile" \
   	-R /scratch0/"$user"/"$referencename"\.fasta \
   	-T IndelRealigner \
