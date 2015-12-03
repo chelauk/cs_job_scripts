@@ -5,9 +5,9 @@
 #$ -j yes
 #$ -l h_rt=12:00:00
 #$ -pe smp 4
-#$ -l h_vmem=26G
-#$ -l tmem=26G
-#$ -l scr=170G
+#$ -l h_vmem=2G
+#$ -l tmem=2G
+#$ -l scr=70G
 #$ -V
 #$ -R y
 
@@ -105,7 +105,12 @@ module load samtools
 
 echo "############## running the bwa mem alignment of the two pairs"
 
-bwa mem -aM -R "@RG\tID:$readgroup\tSM:$sample\tPL:$platformunit\tLB:$library\tPU:$platformunit" /scratch0/"$user"/"$referencefasta" -t 2 "$query1" "$query2" | 
+echo "bwa mem -aM -R"
+echo "@RG\tID:$readgroup\tSM:$sample\tPL:$platformunit\tLB:$library\tPU:$platformunit"
+echo "/scratch0/""$user"/"$referencefasta"
+echo "$query1 $query2"
+
+bwa mem -aM -R "@RG\tID:$readgroup\tSM:$sample\tPL:$platformunit\tLB:$library\tPU:$platformunit" /scratch0/"$user"/"$referencefasta" -t 4 "$query1" "$query2" | 
 samblaster -M -d "$bamfile".disc.sam -s "$bamfile".split.sam | samtools view -bS - -o "$bamfile"
 
 date
