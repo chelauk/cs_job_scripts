@@ -20,8 +20,10 @@ REFDIR=/share/apps/cto/reference/g1kh37
 reference=$1
 query1=$2
 query2=$3
-workplace=$4
-user=$5
+sample=$4
+identifier=$5
+workplace=$6
+user=$7
 referencefasta=$reference\.fasta
 
 WORKDIR=$workplace
@@ -34,8 +36,6 @@ echo "working on sample $query1"
 bamfile="$query1"\.bwa.bam
 
 ### these parameters are required in order to fill in the read groups lines
-readgroup="$query1"_bwa
-sample=$query1
 library="gosgene"
 platformunit="illumina"
 
@@ -110,7 +110,7 @@ echo "@RG\tID:$readgroup\tSM:$sample\tPL:$platformunit\tLB:$library\tPU:$platfor
 echo "/scratch0/""$user"/"$referencefasta"
 echo "$query1 $query2"
 
-bwa mem -aM -R "@RG\tID:$readgroup\tSM:$sample\tPL:$platformunit\tLB:$library\tPU:$platformunit" /scratch0/"$user"/"$referencefasta" -t 3 "$query1" "$query2" | 
+bwa mem -aM -R "@RG\tID:$identifier\tSM:$sample\tPL:$platformunit\tLB:$library\tPU:$platformunit" /scratch0/"$user"/"$referencefasta" -t 3 "$query1" "$query2" | 
 samblaster -M -d "$bamfile".disc.sam -s "$bamfile".split.sam | samtools view -bS - -o "$bamfile"
 
 date
