@@ -98,7 +98,7 @@ date
 
 echo "samtools merge -cp -h $bam1 $output_prefix.bam $vars"
 
-samtools merge -cp -h $bam1 $output_prefix.bam $vars
+samtools merge $output_prefix.bam $vars
 
 date
 
@@ -109,31 +109,19 @@ samtools index "$output_prefix"\.bam
 date
 
 ls -l
-############################
-#  AddOrReplaceReadGroups  #
-############################
-
-mkdir tmp
-
-echo "java -Djava.io.tmpdir=tmp -Xmx12g -Xms2g -jar $PICARD/picard.jar AddOrReplaceReadGroups INPUT=$output_prefix\.bam OUTPUT=$output_prefix\.rg\.bam VALIDATION_STRINGENCY=LENIENT SORT_ORDER=coordinate RGID=$readgroup RGLB=$library RGPL=$platform RGSM=$sample RGPU=$platform 1>$workplace/diag"
-
-java -Djava.io.tmpdir=tmp -Xmx12g -Xms4g -jar "$PICARD"/picard.jar AddOrReplaceReadGroups INPUT="$output_prefix"\.bam OUTPUT="$output_prefix"\.rg\.bam VALIDATION_STRINGENCY=LENIENT SORT_ORDER=coordinate RGID="$readgroup" RGLB="$library" RGPL="$platform" RGSM="$sample" RGPU=$platform 1>"$workplace"/diag
-date
-
-ls -lh
 
 rm -r tmp
 echo "index with samtools"
 
-samtools index "$output_prefix"\.rg\.bam
+samtools index "$output_prefix"\.bam
 date
 
 #############
 # copy back #
 #############
 
-cp "$output_prefix"\.rg\.bam "$workplace"/.
-cp "$output_prefix"\.rg\.bam.bai "$workplace"/.
+cp "$output_prefix"\.bam "$workplace"/.
+cp "$output_prefix"\.bam.bai "$workplace"/.
 
 date
 echo "####MESS Delete files"
