@@ -20,8 +20,8 @@ REFDIR=/share/apps/cto/reference/g1kh37
 reference=$1
 query1=$2
 query2=$3
-sample=$4
-identifier=$5
+sample=$4 #sample identifier
+identifier=$5 #the identifier will create a read group id to  link back to the correct lane 
 workplace=$6
 user=$7
 referencefasta=$reference\.fasta
@@ -60,24 +60,16 @@ echo "####MESS I am now on directory:"
 pwd
 echo
 
-#######################################################
-# check if reference is already available             #
-#######################################################
-
-if [ ! -f "$referencefasta".sa ]
-then
-        echo "####MESS untaring the reference files to the temporary directory"
-        tar -xzf $REFDIR/"$reference"\.tar.gz -C /scratch0/"$user"/
-else
-        echo "####MESS the reference already exists in the node"
-fi
-
-echo "####MESS copy reference completed"
-date
-
 echo "creating the job directory"
 mkdir "$JOB_ID"
 cd "$JOB_ID" || exit
+
+echo "####MESS untaring the reference files to the temporary directory"
+
+tar -xzf $REFDIR/"$reference"\.tar.gz -C /scratch0/"$user"/"$JOB_ID"
+
+echo "####MESS copy reference completed"
+date
 
 echo "####MESS I am now on directory:"
 pwd
@@ -106,11 +98,11 @@ module load samtools
 echo "############## running the bwa mem alignment of the two pairs"
 
 echo "bwa mem -aM -R"
-echo "@RG\tID:$readgroup\tSM:$sample\tPL:$platformunit\tLB:$library\tPU:$platformunit"
+printf "@RG\tID: %s\tSM: %s\tPL:%s\tLB:%s\tPU:%s\n" "$identifier" "$sample" "$platformunit" "$library" "$platformunit" 
 echo "/scratch0/""$user"/"$referencefasta"
 echo "$query1 $query2"
 
-bwa mem -aM -R "@RG\tID:$identifier\tSM:$sample\tPL:$platformunit\tLB:$library\tPU:$platformunit" /scratch0/"$user"/"$referencefasta" -t 3 "$query1" "$query2" | 
+bwa mem -aM -R "@RG\tID:$identifier\tSM:$sample\tPL:$platformunit\tLB:$library\tPU:$platformunit" /scratch0/"$user"/"$JOB_ID"/"$referencefasta" -t 3 "$query1" "$query2" | 
 samblaster -M -d "$bamfile".disc.sam -s "$bamfile".split.sam | samtools view -bS - -o "$bamfile"
 
 date
@@ -125,7 +117,7 @@ echo "Running sambamba sort $bamfile"
 
 mkdir temp
 
-sambamba sort -m 4G -t 4  "$bamfile"  --tmpdir=temp
+sambamba sort -m 4G -t 4  "$bamfile" -o "${bamfile:0:${#bamfile}-8}"\.sorted\.bam  --tmpdir=temp
 
 date 
 
@@ -135,7 +127,7 @@ ls -lh
 #          stats with samtools         #
 ########################################
 
-samtools idxstats "${bamfile:0:7}"*sorted.bam  > "${bamfile:0:7}".stats
+samtools idxstats "${bamfile:0:${#bamfile}-8}"\.sorted\.bam  > "${bamfile:0:${#bamfile}-8}"\.stats
 
 ##################################
 # copy to workplace folder       #
@@ -145,7 +137,10 @@ samtools idxstats "${bamfile:0:7}"*sorted.bam  > "${bamfile:0:7}".stats
 
 touch "$workplace"/bwa_complete
 
-mv "${bamfile:0:7}"* "$workplace"
+cp ./"${bamfile:0:${#bamfile}-8}"\.sorted\.bam "$workplace"
+cp ./"$bamfile".disc.sam "$workplace"
+cp ./"$bamfile".split.sam "$workplace"
+
 date
 
 ###################################
@@ -157,7 +152,6 @@ cd /scratch0/"$user" || exit
 echo "####MESS removing any  file"
 rm -r "$JOB_ID"
 ## remove reference files ######### 
-rm  human*
 echo "####MESS removal done"
 date
 echo "####END job finished"
