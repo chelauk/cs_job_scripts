@@ -10,7 +10,6 @@
 #$ -l scr=80G
 #$ -V
 
-
 echo "the job is running on the node $HOSTNAME"
 echo "job number $JOB_ID"
 
