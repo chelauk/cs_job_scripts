@@ -1,0 +1,157 @@
+<<<<<<< HEAD
+=======
+#!/bin/bash -l
+#Force bash as the executing shell.
+#$ -S /bin/bash
+#$ -N hap_call
+# Join the error stream to the output stream.
+#$ -j yes
+#$ -l h_rt=30:00:00
+#$ -l h_vmem=20G
+#$ -l tmem=20G
+#$ -l scr=80G
+#$ -V
+
+echo "the job is running on the node $HOSTNAME"
+echo "job number $JOB_ID"
+
+#parameters to be passed to the job
+referencename=$1
+workplace=$2
+bamfile=$3
+interval=$4
+user=$5
+
+APPDIR=/share/apps/genomics/GenomeAnalysisTK-3.4-46/
+REFDIR=/share/apps/cto/reference/g1kh37
+
+cd /scratch0 || exit
+if [ ! -d "$user" ]
+then
+        echo "####MESS the directory $user on /scratch0 does not exist: creating it"
+        mkdir "$user"
+        cd "$user" || exit
+else
+        echo "####MESS the directory $user on /scratch0 exists, moving to it"
+        cd "$user" || exit
+fi
+
+echo "####MESS I am now on directory:"
+pwd
+echo
+
+##### folder creation ##############
+echo "creating the job directory"
+mkdir "$JOB_ID"
+cd "$JOB_ID" || exit
+echo "####MESS I am now on directory:"
+
+pwd
+
+###########################
+# copy the reference file #
+###########################
+
+tar -xzf $REFDIR/"$referencename"\.tar.gz -C /scratch0/"$user"/"$JOB_ID"
+
+echo "####MESS copy reference completed"
+date
+
+mkdir tmp
+
+#####################################
+### check for interval files/names ##
+#####################################
+# if interval is given as 0
+
+if [ "$interval" == 0 ]
+ then interval=""  # create an empty $interval variable
+# if $interval looks like bed file
+elif [[ "$interval" == *"bed" ]]
+        then cp "$REFDIR"/"$interval" .
+# if interval is given as a chromosome then keep it
+elif [[ "$interval" == *"[1-9A-Z]" ]]
+    then    
+    :
+fi
+
+#####################################
+# copy all necessary reference files
+#####################################
+
+snps=/share/apps/cto/reference/gatk_resources/dbsnp_138.b37.excluding_sites_after_129.vcf.gz
+
+cp "$snps"* .
+
+cp "$workplace"/"${bamfile:0:${#bamfile}-1}"* .
+
+# check if $inteval is empty
+if  [ -z "$interval" ]
+   then
+
+#########################################
+# run haplotype caller with no intervals
+#########################################
+
+   java -XX:ParallelGCThreads=1 -Xmx16g -Djava.io.tmpdir=tmp \
+   -jar "$APPDIR"/GenomeAnalysisTK.jar \
+   -T HaplotypeCaller \
+   -R "$referencename".fasta \
+   -I "$bamfile" \
+   --dbsnp dbsnp_138.b37.excluding_sites_after_129.vcf.gz \
+   -stand_call_conf 30 \
+   -stand_emit_conf 10 \
+   -o "${bamfile:0:${#bamfile}-4}".raw.vcf 
+   
+   if [ $? -eq 0 ]
+     then
+       echo "### hap call complete"
+       touch "$workplace"/var_call_complete
+   fi
+
+
+else 
+
+#########################################
+# run haplotype caller with intervals
+#########################################
+
+   java -XX:ParallelGCThreads=1 -Xmx16g -Djava.io.tmpdir=tmp \
+   -jar "$APPDIR"/GenomeAnalysisTK.jar \
+   -T HaplotypeCaller \
+   -R "$referencename".fasta \
+   -I "$bamfile" \
+   -L "$interval" \
+   --dbsnp dbsnp_138.b37.excluding_sites_after_129.vcf.gz \
+   -stand_call_conf 30 \
+   -stand_emit_conf 10 \
+   -o "${bamfile:0:${#bamfile}-4}".raw.vcf 
+   
+   if [ $? -eq 0 ]
+      then
+      echo "### caller complete"
+      touch "$workplace"/var_call_complete
+   fi
+  
+fi
+
+###########################
+# job completed copy back #
+###########################
+
+echo "### copy the results back"
+date
+
+cp ./*.raw.vcf "$workplace"/.
+
+date
+
+echo "####MESS moving to /scratch0/$user"
+cd /scratch0/"$user" || exit
+echo "####MESS removing any left file"
+rm --recursive ./$JOB_ID
+echo "####MESS removal done"
+date
+echo "### job completed"
+date
+>>>>>>> 71a203498fb71ab13f41e87fec2a173f9d0c94f1
