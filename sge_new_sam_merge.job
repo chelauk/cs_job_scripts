@@ -17,7 +17,7 @@ output_prefix="$sample"_$chromosome
 platform="ILLUMINA"
 readgroup="$output_prefix"\.bam
 library="GOSgene"
-array=( $(ls "$workplace"/lane*/*gz.bwa.sorted.REF_"$chromosome"\.bam) )
+array=( $(ls "$workplace"/lane*/*gz.sorted.REF_"$chromosome"\.bam) )
 
 module load samtools
 
