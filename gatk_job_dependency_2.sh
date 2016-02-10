@@ -10,13 +10,15 @@ read2="$sample"_R2.fq.gz
 bamfile="$sample"_R1.fq.gz.bwa.sorted.bam
 #######################
 interval=$4
-name=$5
-user=$6
+user=$5
+
+log=$dir/log
 
 # check arguments are given
 if  [ -z "$1" ]
   then
-    echo "Please give a job name, the reads with be supplied as sample_R1.fq.gz and sample_R2.fq.gz the aligned file will be sample_R1.fq.gz.bwa.sorted.bam"
+    echo "Please give a job name, the reads with be supplied as sample_R1.fq.gz and sample_R2.fq.gz the aligned file wi
+ll be sample_R1.fq.gz.bwa.sorted.bam"
     exit
 fi
 
@@ -31,78 +33,25 @@ if  [ -z "$3" ]
 fi
 
 if  [ -z "$4" ]
- then echo "Interval .bed file is optional if none is necessary please insert 0 or for a particular chromosome enter chromosome name"
+ then echo "Interval .bed file is optional if none is necessary please insert 0 or for a particular chromosome enter ch
+romosome name"
  exit
 fi
 
 if  [ -z "$5" ]
- then echo "please enter jobname"
- exit
-fi
-
-if  [ -z "$6" ]
  then echo "please enter username"
  exit
 fi
 
+
 # no jobs complete
-if ! [ -f "$dir"/bwa_complete ] && ! [ -f "$dir"/interval_complete ]  && ! [ -f "$dir"/realign_complete ] && ! [ -f "$dir"/recal_tab_complete ] && ! [ -f "$dir"/recal_complete ] && ! [ -f "$dir"/var_call_complete ] # if none of the jobs have completed 
-  then
-    first
-    second
-    third
-    fourth
-    fifth
-    sixth
-    echo "Six jobs"
-    exit 0
+if ! [ -f "$dir"/bwa_complete ] && ! [ -f "$dir"/interval_complete ]  && ! [ -f "$dir"/realign_complete ] && ! [ -f "$dir"/recal_tab_complete ] && ! [ -f "$dir"/recal_complete ] && ! [ -f "$dir"/var_call_complete ] 
 
-elif ! [ -f "$dir"/interval_complete ]  && ! [ -f "$dir"/realign_complete ] && ! [ -f "$dir"/recal_tab_complete ] && ! [ -f "$dir"/recal_complete ] && ! [ -f "$dir"/var_call_complete ] # if bwa completed 
-  then 
-    second
-    third
-    fourth
-    fifth
-    sixth
-    echo "Five jobs"
-    exit 0
-
-elif  ! [ -f "$dir"/realign_complete ] && ! [ -f "$dir"/recal_tab_complete ] && ! [ -f "$dir"/recal_complete ] && ! [ -f "$dir"/var_call_complete ] # if bwa completed 
-  then 
-    third
-    fourth
-    fifth
-    sixth
-    echo "Four jobs"
-    exit 0
-
-elif ! [ -f "$dir"/recal_tab_complete ] && ! [ -f "$dir"/recal_complete ] && ! [ -f "$dir"/var_call_complete ] # if interval creation has completed
-  then
-    fourth
-    fifth
-    sixth
-    echo "Three jobs"
-    exit 0
-
-elif  ! [ -f "$dir"/recal_complete ] && ! [ -f "$dir"/var_call_complete ] # if interval creation has completed
-  then
-    fifth
-    sixth
-    echo "Two jobs"
-    exit 0
-
-elif ! [ -f "$dir"/var_call_complete ]
-  then
-  	sixth
-  	echo "One job"
-  	exit 0
-  	
-else
-  echo "all done!"
-  exit 0
-fi
+then first && second && third && fourth && fifth && sixth
+fi 
     
-  function first { qsub -wd "$dir"/log -N "bwa-$name" \
+function first { 
+  qsub -wd $log -N "bwa-$sample" \
   /home/sejjctj/job_scripts/sge_bwa_mem_sambamba_samblaster_4_core.job \
   "$refname" \
   "$read1" \
@@ -111,16 +60,18 @@ fi
   "$user" 
   }
 
-  function second { qsub -wd "$dir"/log -N "intCr-$name" -hold_jid "bwa-$name" \
+function second { 
+  qsub -wd $log -N "intCr-$sample" -hold_jid "bwa-$sample" \
   /home/sejjctj/job_scripts/sge_gatk_interval_creater.job \
   "$refname" \
   "$dir" \
   "$bamfile" \
   "$interval" \
-  "$user" 
+  "$user"
   }
 
-  function third { qsub -wd "$dir"/log -N "realn-$name" -hold_jid "intCr-$name" \
+function third  { 
+  qsub -wd $log -N "realn-$sample" -hold_jid "intCr-$sample" \
   /home/sejjctj/job_scripts/sge_gatk_interval_realigner.job \
   "$refname" \
   "$dir" \
@@ -130,7 +81,8 @@ fi
   "$user" 
   }
 
-  function fourth { qsub -wd "$dir"/log -N "reTab-$name" -hold_jid "realn-$name" \
+function fourth { 
+  qsub -wd $log -N "reTab-$sample" -hold_jid "realn-$sample" \
   /home/sejjctj/job_scripts/sge_gatk_base_recal_table_creator.job \
   "$refname" \
   "$dir" \
@@ -139,7 +91,8 @@ fi
   "$user"
   }
 
-  function fifth { qsub -wd "$dir"/log -N "recal-$name" -hold_jid "reTab-$name" \
+function fifth { 
+  qsub -wd $log -N "recal-$sample" -hold_jid "reTab-$sample" \
   /home/sejjctj/job_scripts/sge_gatk_print_reads.job \
   "$refname" \
   "$dir" \
@@ -149,7 +102,8 @@ fi
   "$user"
   }
 
-  function sixth { qsub -wd "$dir"/log -N "hapl-$name" -hold_jid "recal-$name" \
+function sixth  { 
+  qsub -wd $log -N "hapl-$sample" -hold_jid "recal-$sample" \
   /home/sejjctj/job_scripts/sge_gatk_haplotype_caller.job \
   "$refname" \
   "$dir" \

@@ -7,7 +7,7 @@
 #$ -l h_rt=30:00:00
 #$ -l h_vmem=20G
 #$ -l tmem=20G
-#$ -l scr=150G
+#$ -l scr=50G
 #$ -V
 
 
@@ -41,7 +41,10 @@ echo "####MESS I am now on directory:"
 pwd
 echo
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 3b9809833fbc9d594c3f3136a64c5a2578ad3037
 ##### folder creation ##############
 echo "creating the job directory"
 mkdir "$JOB_ID"
@@ -50,6 +53,7 @@ echo "####MESS I am now on directory:"
 
 pwd
 
+<<<<<<< HEAD
 ##################################
 # copy of the reference if needed
 ##################################
@@ -65,6 +69,13 @@ fi
 			
 echo "####MESS copy reference completed"
 date
+=======
+#########################
+# copy of the reference #
+#########################
+
+tar -xzf $REFDIR/"$referencename"\.tar.gz -C /scratch0/"$user"/"$JOB_ID"/
+>>>>>>> 3b9809833fbc9d594c3f3136a64c5a2578ad3037
 
 mkdir tmp
 
@@ -159,8 +170,13 @@ date
 echo "####MESS moving to /scratch0/$user"
 cd /scratch0/"$user" || exit
 echo "####MESS removing any left file"
+<<<<<<< HEAD
 rm --recursive ./$JOB_ID
 rm 
+=======
+rm -r "$JOB_ID"
+
+>>>>>>> 3b9809833fbc9d594c3f3136a64c5a2578ad3037
 echo "####MESS removal done"
 date
 echo "### job completed"
