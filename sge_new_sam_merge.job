@@ -17,12 +17,9 @@ output_prefix="$sample"_$chromosome
 platform="ILLUMINA"
 readgroup="$output_prefix"\.bam
 library="GOSgene"
-array=( $(ls "$workplace"/lane*/BGI-[0-9][0-9][0-9]\_L00[0-9]\_1.fq.gz.bwa.sorted.REF_"$chromosome"\.bam) )
+array=( $(ls "$workplace"/lane*/*gz.bwa.sorted.REF_"$chromosome"\.bam) )
 
 module load samtools
-# I don't load picard-tools as module because I want to give java -jar options
-
-PICARD=/share/apps/cto/packages/Picard-tools/1.140/
 
 echo "---parameters received-----"
 echo "workplace " "$workplace"
@@ -109,12 +106,6 @@ samtools index "$output_prefix"\.bam
 date
 
 ls -l
-
-rm -r tmp
-echo "index with samtools"
-
-samtools index "$output_prefix"\.bam
-date
 
 #############
 # copy back #
