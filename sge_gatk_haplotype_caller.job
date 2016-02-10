@@ -44,7 +44,7 @@ mkdir "$JOB_ID"
 cd "$JOB_ID" || exit
 echo "####MESS I am now on directory:"
 
-pwd
+ls -lh
 
 ###########################
 # copy the reference file #
