@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-=======
 #!/bin/bash -l
 #Force bash as the executing shell.
 #$ -S /bin/bash
