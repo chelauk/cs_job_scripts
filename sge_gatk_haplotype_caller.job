@@ -7,7 +7,7 @@
 #$ -l h_rt=30:00:00
 #$ -l h_vmem=20G
 #$ -l tmem=20G
-#$ -l scr=150G
+#$ -l scr=80G
 #$ -V
 
 
@@ -24,8 +24,6 @@ user=$5
 APPDIR=/share/apps/genomics/GenomeAnalysisTK-3.4-46/
 REFDIR=/share/apps/cto/reference/g1kh37
 
-
-
 cd /scratch0 || exit
 if [ ! -d "$user" ]
 then
@@ -41,7 +39,6 @@ echo "####MESS I am now on directory:"
 pwd
 echo
 
-
 ##### folder creation ##############
 echo "creating the job directory"
 mkdir "$JOB_ID"
@@ -50,19 +47,12 @@ echo "####MESS I am now on directory:"
 
 pwd
 
-##################################
-# copy of the reference if needed
-##################################
+###########################
+# copy the reference file #
+###########################
 
-if [ ! -f "$referencename.fasta" ] || [ ! -f "$referencename.fasta.fai" ] || [ ! -f "$referencename.dict" ]
+tar -xzf $REFDIR/"$referencename"\.tar.gz -C /scratch0/"$user"/"$JOB_ID"
 
-then
-	echo "####MESS untaring the reference files to the temporary directory"
-	tar -xzf $REFDIR/"$referencename"\.tar.gz -C /scratch0/"$user"/"$JOB_ID"
-else
-	echo "####MESS the reference already exists in the node"
-fi
-			
 echo "####MESS copy reference completed"
 date
 
@@ -142,7 +132,6 @@ else
       touch "$workplace"/var_call_complete
    fi
   
-
 fi
 
 ###########################
@@ -160,7 +149,6 @@ echo "####MESS moving to /scratch0/$user"
 cd /scratch0/"$user" || exit
 echo "####MESS removing any left file"
 rm --recursive ./$JOB_ID
-rm 
 echo "####MESS removal done"
 date
 echo "### job completed"
