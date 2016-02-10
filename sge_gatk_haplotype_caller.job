@@ -41,22 +41,6 @@ echo "####MESS I am now on directory:"
 pwd
 echo
 
-##################################
-# copy of the reference if needed
-##################################
-
-if [ ! -f "$referencename.fasta" ] || [ ! -f "$referencename.fasta.fai" ] || [ ! -f "$referencename.dict" ]
-
-then
-	echo "####MESS untaring the reference files to the temporary directory"
-	tar -xzf $REFDIR/"$referencename"\.tar.gz -C /scratch0/"$user"/
-else
-	echo "####MESS the reference already exists in the node"
-fi
-			
-echo "####MESS copy reference completed"
-date
-
 ##### folder creation ##############
 echo "creating the job directory"
 mkdir "$JOB_ID"
@@ -64,6 +48,12 @@ cd "$JOB_ID" || exit
 echo "####MESS I am now on directory:"
 
 pwd
+
+#########################
+# copy of the reference #
+#########################
+
+tar -xzf $REFDIR/"$referencename"\.tar.gz -C /scratch0/"$user"/"$JOB_ID"/
 
 mkdir tmp
 
@@ -104,7 +94,7 @@ if  [ -z "$interval" ]
    java -XX:ParallelGCThreads=1 -Xmx16g -Djava.io.tmpdir=tmp \
    -jar "$APPDIR"/GenomeAnalysisTK.jar \
    -T HaplotypeCaller \
-   -R ../"$referencename".fasta \
+   -R "$referencename".fasta \
    -I "$bamfile" \
    --dbsnp dbsnp_138.b37.excluding_sites_after_129.vcf.gz \
    -stand_call_conf 30 \
@@ -127,7 +117,7 @@ else
    java -XX:ParallelGCThreads=1 -Xmx16g -Djava.io.tmpdir=tmp \
    -jar "$APPDIR"/GenomeAnalysisTK.jar \
    -T HaplotypeCaller \
-   -R ../"$referencename".fasta \
+   -R "$referencename".fasta \
    -I "$bamfile" \
    -L "$interval" \
    --dbsnp dbsnp_138.b37.excluding_sites_after_129.vcf.gz \
@@ -159,8 +149,7 @@ echo "####MESS moving to /scratch0/$user"
 cd /scratch0/"$user" || exit
 echo "####MESS removing any left file"
 rm -r "$JOB_ID"
-rm ./human*
-rm 
+
 echo "####MESS removal done"
 date
 echo "### job completed"
